@@ -30,7 +30,7 @@ type Spotlight2D = {
 
 const SPOTLIGHT: Spotlight2D = {
     pos: [0, -1],
-    rotation: Math.PI / 4,
+    rotation: Math.PI / 2,
     focalLength: 0.1,
     fieldOfView: Math.PI / 3
 }
@@ -59,10 +59,11 @@ function pointToStr([x, y]: Point2D): string {
 
 function updateTextDisplay() {
     if (state.cursor) {
-        const [x, y] = state.cursor;
+        const lightPoint = clipSpaceToLight(state.cursor);
         textDisplay.textContent = [
             `clip space: ${pointToStr(state.cursor)}`,
-            `light space: ${pointToStr(clipSpaceToLight(state.cursor))}`,
+            `light space: ${pointToStr(lightPoint)}`,
+            `projected light space: ${lightSpaceToProjected(lightPoint)}`
         ].join('\n');
     } else {
         textDisplay.textContent = "";
@@ -90,6 +91,16 @@ function clipSpaceToLight(point: Point2D): Point2D {
     const rotated = rotatePoint(point, Math.PI / 2 - SPOTLIGHT.rotation, SPOTLIGHT.pos);
     const translated = subtractPoints(rotated, SPOTLIGHT.pos);
     return translated;
+}
+
+function lightSpaceToProjected(point: Point2D): number {
+    const halfAngle = SPOTLIGHT.fieldOfView / 2;
+    const rightExtent = SPOTLIGHT.focalLength * Math.tan(halfAngle);
+    const scaleFactor = 1 / rightExtent;
+    const scaledFocalLength = SPOTLIGHT.focalLength * scaleFactor;
+    const [x, y] = multiply(point, scaleFactor);
+    const projected = x * scaledFocalLength / y;
+    return projected;
 }
 
 function clipPointFromMouseEvent(event: MouseEvent): Point2D {
@@ -122,6 +133,7 @@ function drawSpotlight(ctx: CanvasRenderingContext2D, light: Spotlight2D) {
     drawLine(ctx, {start: light.pos, end: rightFOV});
 
     const aheadFocalLen = addPoints(light.pos, multiply(normalize(direction), light.focalLength));
+    // TODO: This isn't actually completely accurate, but it's pretty close I think.
     const leftFocalLen = rotatePoint(aheadFocalLen, light.fieldOfView / 2, light.pos);
     const rightFocalLen = rotatePoint(aheadFocalLen, -light.fieldOfView / 2, light.pos);
     drawLine(ctx, {start: leftFocalLen, end: rightFocalLen});
