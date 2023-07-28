@@ -6,6 +6,7 @@ interface Line2D {
 }
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+const display = document.getElementById("display") as HTMLPreElement;
 
 const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
@@ -124,8 +125,13 @@ function addPoints(a: Point2D, b: Point2D): Point2D {
 
 drawCanvas();
 
-canvas.addEventListener("click", event => {
-    console.log(clipPointFromMouseEvent(event));
+canvas.addEventListener("mousemove", event => {
+    const [x, y] = clipPointFromMouseEvent(event);
+    display.textContent = `(${x}, ${y})`;
 });
+
+canvas.addEventListener("mouseout", event => {
+    display.textContent = "";
+})
 
 export default {}
