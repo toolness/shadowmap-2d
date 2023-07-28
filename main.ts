@@ -44,16 +44,26 @@ function drawCanvas() {
     drawSpotlight(ctx, SPOTLIGHT);
 }
 
-function convertPoint(point: Point2D): Point2D {
+function clipSpaceToCanvas(point: Point2D): Point2D {
     const x = (point[0] + 1) / 2 * WIDTH;
     const y = (-point[1] + 1) / 2 * HEIGHT;
     return [x, y]
 }
 
+function canvasSpaceToClip(point: Point2D): Point2D {
+    const x = (point[0] / WIDTH) * 2 - 1;
+    const y = ((HEIGHT - point[1]) / HEIGHT) * 2 - 1;
+    return [x, y]
+}
+
+function clipPointFromMouseEvent(event: MouseEvent): Point2D {
+    return canvasSpaceToClip([event.offsetX, event.offsetY]);
+}
+
 function drawLine(ctx: CanvasRenderingContext2D, line: Line2D) {
     ctx.beginPath();
-    ctx.moveTo(...convertPoint(line.start));
-    ctx.lineTo(...convertPoint(line.end));
+    ctx.moveTo(...clipSpaceToCanvas(line.start));
+    ctx.lineTo(...clipSpaceToCanvas(line.end));
     ctx.stroke();
 }
 
@@ -65,7 +75,7 @@ function drawWall(ctx: CanvasRenderingContext2D, wall: Line2D) {
 function drawSpotlight(ctx: CanvasRenderingContext2D, light: Spotlight2D) {
     ctx.strokeStyle = SPOTLIGHT_STROKE;
     ctx.beginPath();
-    ctx.arc(...convertPoint(light.pos), SPOTLIGHT_POINT_RADIUS, 0, Math.PI * 2);
+    ctx.arc(...clipSpaceToCanvas(light.pos), SPOTLIGHT_POINT_RADIUS, 0, Math.PI * 2);
     ctx.stroke();
 
     const ahead = addPoints(light.pos, multiply(normalize(light.direction), SPOTLIGHT_MAX_LEN));
@@ -113,5 +123,9 @@ function addPoints(a: Point2D, b: Point2D): Point2D {
 }
 
 drawCanvas();
+
+canvas.addEventListener("click", event => {
+    console.log(clipPointFromMouseEvent(event));
+});
 
 export default {}
