@@ -23,14 +23,14 @@ const WALLS: Line2D[] = [
 
 type Spotlight2D = {
     pos: Point2D,
-    direction: Point2D,
+    rotation: number,
     focalLength: number,
     fieldOfView: number
 }
 
 const SPOTLIGHT: Spotlight2D = {
     pos: [0, -1],
-    direction: [0, 1],
+    rotation: Math.PI / 4,
     focalLength: 0.1,
     fieldOfView: Math.PI / 3
 }
@@ -87,8 +87,8 @@ function canvasSpaceToClip(point: Point2D): Point2D {
 }
 
 function clipSpaceToLight(point: Point2D): Point2D {
-    // TODO: Account for direction!
-    const translated = subtractPoints(point, SPOTLIGHT.pos);
+    const rotated = rotatePoint(point, Math.PI / 2 - SPOTLIGHT.rotation, SPOTLIGHT.pos);
+    const translated = subtractPoints(rotated, SPOTLIGHT.pos);
     return translated;
 }
 
@@ -114,13 +114,14 @@ function drawSpotlight(ctx: CanvasRenderingContext2D, light: Spotlight2D) {
     ctx.arc(...clipSpaceToCanvas(light.pos), SPOTLIGHT_POINT_RADIUS, 0, Math.PI * 2);
     ctx.stroke();
 
-    const ahead = addPoints(light.pos, multiply(normalize(light.direction), SPOTLIGHT_MAX_LEN));
+    const direction: Point2D = rotatePoint([1, 0], light.rotation, [0, 0]);
+    const ahead = addPoints(light.pos, multiply(normalize(direction), SPOTLIGHT_MAX_LEN));
     const leftFOV = rotatePoint(ahead, light.fieldOfView / 2, light.pos);
     drawLine(ctx, {start: light.pos, end: leftFOV});
     const rightFOV = rotatePoint(ahead, -light.fieldOfView / 2, light.pos);
     drawLine(ctx, {start: light.pos, end: rightFOV});
 
-    const aheadFocalLen = addPoints(light.pos, multiply(normalize(light.direction), light.focalLength));
+    const aheadFocalLen = addPoints(light.pos, multiply(normalize(direction), light.focalLength));
     const leftFocalLen = rotatePoint(aheadFocalLen, light.fieldOfView / 2, light.pos);
     const rightFocalLen = rotatePoint(aheadFocalLen, -light.fieldOfView / 2, light.pos);
     drawLine(ctx, {start: leftFocalLen, end: rightFocalLen});
