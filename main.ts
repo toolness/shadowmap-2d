@@ -53,10 +53,17 @@ function drawCanvas() {
     drawSpotlight(ctx, SPOTLIGHT);
 }
 
+function pointToStr([x, y]: Point2D): string {
+    return `(${x}, ${y})`
+}
+
 function updateTextDisplay() {
     if (state.cursor) {
         const [x, y] = state.cursor;
-        textDisplay.textContent = `(${x}, ${y})`;    
+        textDisplay.textContent = [
+            `clip space: ${pointToStr(state.cursor)}`,
+            `light space: ${pointToStr(clipSpaceToLight(state.cursor))}`,
+        ].join('\n');
     } else {
         textDisplay.textContent = "";
     }
@@ -77,6 +84,12 @@ function canvasSpaceToClip(point: Point2D): Point2D {
     const x = (point[0] / WIDTH) * 2 - 1;
     const y = ((HEIGHT - point[1]) / HEIGHT) * 2 - 1;
     return [x, y]
+}
+
+function clipSpaceToLight(point: Point2D): Point2D {
+    // TODO: Account for direction!
+    const translated = subtractPoints(point, SPOTLIGHT.pos);
+    return translated;
 }
 
 function clipPointFromMouseEvent(event: MouseEvent): Point2D {
