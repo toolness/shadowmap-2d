@@ -6,7 +6,7 @@ interface Line2D {
 }
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-const display = document.getElementById("display") as HTMLPreElement;
+const textDisplay = document.getElementById("display") as HTMLPreElement;
 
 const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
@@ -35,6 +35,14 @@ const SPOTLIGHT: Spotlight2D = {
     fieldOfView: Math.PI / 3
 }
 
+interface State {
+    cursor: Point2D|undefined
+}
+
+const state: State = {
+    cursor: undefined
+}
+
 function drawCanvas() {
     const ctx = canvas.getContext('2d')!;
     ctx.fillStyle = "black";
@@ -43,6 +51,20 @@ function drawCanvas() {
         drawWall(ctx, line);
     }
     drawSpotlight(ctx, SPOTLIGHT);
+}
+
+function updateTextDisplay() {
+    if (state.cursor) {
+        const [x, y] = state.cursor;
+        textDisplay.textContent = `(${x}, ${y})`;    
+    } else {
+        textDisplay.textContent = "";
+    }
+}
+
+function update() {
+    drawCanvas();
+    updateTextDisplay();
 }
 
 function clipSpaceToCanvas(point: Point2D): Point2D {
@@ -123,15 +145,16 @@ function addPoints(a: Point2D, b: Point2D): Point2D {
     return [a[0] + b[0], a[1] + b[1]]
 }
 
-drawCanvas();
+update();
 
 canvas.addEventListener("mousemove", event => {
-    const [x, y] = clipPointFromMouseEvent(event);
-    display.textContent = `(${x}, ${y})`;
+    state.cursor = clipPointFromMouseEvent(event);
+    update();
 });
 
 canvas.addEventListener("mouseout", event => {
-    display.textContent = "";
+    state.cursor = undefined;
+    update();
 })
 
 export default {}
