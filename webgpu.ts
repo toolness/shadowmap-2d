@@ -72,9 +72,39 @@ const renderingVertexBufferLayout: GPUVertexBufferLayout = {
     }]
 };
 
+const renderingSampler = device.createSampler({
+    addressModeU: "clamp-to-edge",
+    addressModeV: "clamp-to-edge",
+    addressModeW: "clamp-to-edge",
+    magFilter: "linear",
+    minFilter: "linear",
+    mipmapFilter: "nearest",
+    lodMinClamp: 0,
+    lodMaxClamp: 100
+});
+
+const renderingBindGroupLayout = device.createBindGroupLayout({
+    label: "Rendering bind group layout",
+    entries: [{
+        binding: 0,
+        visibility: GPUShaderStage.FRAGMENT,
+        sampler: {
+            type: "filtering"
+        }
+    }, {
+        binding: 1,
+        visibility: GPUShaderStage.FRAGMENT,
+        texture: {
+            sampleType: "depth",
+            viewDimension: "2d",
+            multisampled: false
+        }
+    }]
+});
+
 const renderingPipelineLayout = device.createPipelineLayout({
     label: "Rendering pipeline layout",
-    bindGroupLayouts: []
+    bindGroupLayouts: [renderingBindGroupLayout]
 });
 
 const renderingPipeline = device.createRenderPipeline({
@@ -132,6 +162,8 @@ const shadowMapDepthTexture = device.createTexture({
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC
 });
 
+const shadowMapDepthTextureView = shadowMapDepthTexture.createView();
+
 const shadowMapPipelineLayout = device.createPipelineLayout({
     label: "Shadow map pipeline layout",
     bindGroupLayouts: []
@@ -168,6 +200,18 @@ const shadowMapStagingBuffer = device.createBuffer({
     usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
 });
 
+const renderingBindGroup = device.createBindGroup({
+    label: "Rendering bind group",
+    layout: renderingBindGroupLayout,
+    entries: [{
+        binding: 0,
+        resource: renderingSampler
+    }, {
+        binding: 1,
+        resource: shadowMapDepthTextureView
+    }]
+});
+
 function draw() {
     const encoder = device.createCommandEncoder();
 
@@ -181,7 +225,7 @@ function draw() {
             storeOp: "store"
         }],
         depthStencilAttachment: {
-            view: shadowMapDepthTexture.createView(),
+            view: shadowMapDepthTextureView,
             depthLoadOp: "clear",
             depthStoreOp: "store",
             depthClearValue: 1.0,
@@ -214,6 +258,7 @@ function draw() {
     });
     renderingPass.setPipeline(renderingPipeline);
     renderingPass.setVertexBuffer(0, renderingVertexBuffer);
+    renderingPass.setBindGroup(0, renderingBindGroup);
     renderingPass.draw(renderingVertices.length / 2);
     renderingPass.end();
 
