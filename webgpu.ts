@@ -1,5 +1,8 @@
 const canvas = document.querySelector("canvas")!;
 
+const WIDTH = canvas.width;
+const HEIGHT = canvas.height;
+
 if (!navigator.gpu) {
     throw new Error("WebGPU not supported on this browser.");
 }
@@ -35,10 +38,10 @@ async function fetchShader(device: GPUDevice, filename: string): Promise<GPUShad
 const shaders = await fetchShader(device, "shaders.wgsl");
 
 const vertices = new Float32Array([
-    0.0, 0.0,
-    0.75, 0.0,
-    -1.0, 0.0,
-    -0.5, 0.0,
+    0.0, 0.1,
+    0.75, 0.9,
+    -1.0, 0.5,
+    1.0, 0.5,
 ]);
 
 const vertexBuffer = device.createBuffer({
@@ -58,9 +61,30 @@ const vertexBufferLayout: GPUVertexBufferLayout = {
     }]
 };
 
+const depthTexture = device.createTexture({
+    label: "Depth texture",
+    size: {
+        width: WIDTH,
+        height: HEIGHT,
+        depthOrArrayLayers: 1
+    },
+    mipLevelCount: 1,
+    sampleCount: 1,
+    dimension: "2d",
+    format: "depth32float",
+    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING
+});
+
+const depthView = depthTexture.createView();
+
 const pipeline = device.createRenderPipeline({
     label: "shadowMap",
     layout: "auto",
+    depthStencil: {
+        format: "depth32float",
+        depthWriteEnabled: true,
+        depthCompare: "less",
+    },
     primitive: {
         topology: "line-list"
     },
@@ -89,7 +113,13 @@ function draw() {
                 r: 0, g: 0, b: 0, a: 1
             },
             storeOp: "store"
-        }]
+        }],
+        depthStencilAttachment: {
+            view: depthView,
+            depthLoadOp: "clear",
+            depthStoreOp: "store",
+            depthClearValue: 1.0,
+        }
     });
     pass.setPipeline(pipeline);
     pass.setVertexBuffer(0, vertexBuffer);
