@@ -38,22 +38,28 @@ const SPOTLIGHT: Spotlight2D = {
 
 interface State {
     cursor: Point2D|undefined,
-    lightMap: Float32Array|undefined
+    lightMap: Float32Array|undefined,
+    lightRendering: OffscreenCanvas|undefined,
 }
 
 const state: State = {
     cursor: undefined,
     lightMap: undefined,
+    lightRendering: undefined,
 }
 
 function drawCanvas() {
     const ctx = canvas.getContext('2d')!;
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);    
-    for (const line of WALLS) {
-        drawWall(ctx, line);
+    if (state.lightRendering) {
+        ctx.drawImage(state.lightRendering, 0, 0);
+    } else {
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
-    drawSpotlight(ctx, SPOTLIGHT);
+    for (const line of WALLS) {
+        drawWallDebugLines(ctx, line);
+    }
+    drawSpotlightDebugLines(ctx, SPOTLIGHT);
 }
 
 function updateLightmap() {
@@ -94,6 +100,42 @@ function updateLightmap() {
         }
     }
     state.lightMap = lightmapView;
+    updateLightRendering();
+}
+
+function updateLightRendering() {
+    if (!state.lightMap) {
+        return;
+    }
+    const canvas = new OffscreenCanvas(WIDTH, HEIGHT);
+    state.lightRendering = canvas;
+    const ctx = canvas.getContext('2d')!;
+    const imageData = ctx.createImageData(WIDTH, HEIGHT);
+    let index = 0;
+    for (let y = 0; y < HEIGHT; y++) {
+        for (let x = 0; x < WIDTH; x++) {
+            const point = canvasSpaceToClip([x, y]);
+            const lightPoint = clipSpaceToLight(point);
+            const projectedLight = lightSpaceToProjected(lightPoint);
+            const lightMap = projectedLightSpaceToLightMap(projectedLight);
+            let isLit = false;
+            if (lightMap >= 0 && lightMap < LIGHTMAP_WIDTH) {
+                isLit = state.lightMap[lightMap] > lightPoint[1]
+            }
+            imageData.data[index + 3] = 255;
+            if (isLit) {
+                imageData.data[index] = 128;
+                imageData.data[index + 1] = 128;
+                imageData.data[index + 2] = 128;
+            } else {
+                imageData.data[index] = 0;
+                imageData.data[index + 1] = 0;
+                imageData.data[index + 2] = 0;
+            }
+            index += 4;
+        }
+    }
+    ctx.putImageData(imageData, 0, 0);
 }
 
 function pointToStr([x, y]: Point2D): string {
@@ -179,12 +221,12 @@ function drawLine(ctx: CanvasRenderingContext2D, line: Line2D) {
     ctx.stroke();
 }
 
-function drawWall(ctx: CanvasRenderingContext2D, wall: Line2D) {
+function drawWallDebugLines(ctx: CanvasRenderingContext2D, wall: Line2D) {
     ctx.strokeStyle = WALL_STROKE;
     drawLine(ctx, wall);
 }
 
-function drawSpotlight(ctx: CanvasRenderingContext2D, light: Spotlight2D) {
+function drawSpotlightDebugLines(ctx: CanvasRenderingContext2D, light: Spotlight2D) {
     ctx.strokeStyle = SPOTLIGHT_STROKE;
     ctx.beginPath();
     ctx.arc(...clipSpaceToCanvas(light.pos), SPOTLIGHT_POINT_RADIUS, 0, Math.PI * 2);
