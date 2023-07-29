@@ -77,9 +77,14 @@ const depthTexture = device.createTexture({
 
 const depthView = depthTexture.createView();
 
+const pipelineLayout = device.createPipelineLayout({
+    label: "Pipeline layout",
+    bindGroupLayouts: []
+});
+
 const pipeline = device.createRenderPipeline({
     label: "shadowMap",
-    layout: "auto",
+    layout: pipelineLayout,
     depthStencil: {
         format: "depth32float",
         depthWriteEnabled: true,
