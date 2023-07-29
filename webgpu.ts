@@ -36,7 +36,9 @@ const shaders = await fetchShader(device, "shaders.wgsl");
 
 const vertices = new Float32Array([
     0.0, 0.0,
-    0.75, 0.0
+    0.75, 0.0,
+    -1.0, 0.0,
+    -0.5, 0.0,
 ]);
 
 const vertexBuffer = device.createBuffer({
