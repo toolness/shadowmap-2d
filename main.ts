@@ -10,6 +10,7 @@ const textDisplay = document.getElementById("display") as HTMLPreElement;
 
 const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
+const LIGHTMAP_WIDTH = WIDTH;
 
 const WALL_STROKE = "yellow";
 const SPOTLIGHT_STROKE = "white";
@@ -36,11 +37,13 @@ const SPOTLIGHT: Spotlight2D = {
 }
 
 interface State {
-    cursor: Point2D|undefined
+    cursor: Point2D|undefined,
+    lightMap: Float32Array|undefined
 }
 
 const state: State = {
-    cursor: undefined
+    cursor: undefined,
+    lightMap: undefined,
 }
 
 function drawCanvas() {
@@ -53,6 +56,46 @@ function drawCanvas() {
     drawSpotlight(ctx, SPOTLIGHT);
 }
 
+function updateLightmap() {
+    if (state.lightMap) {
+        return
+    }
+    const lightmapBuffer = new ArrayBuffer(LIGHTMAP_WIDTH * 4);
+    const lightmapView = new Float32Array(lightmapBuffer);
+    lightmapView.fill(Infinity);
+    for (const line of WALLS) {
+        const start = clipSpaceToLight(line.start);
+        let startLM = [projectedLightSpaceToLightMap(lightSpaceToProjected(start)), start[1]];
+        const end = clipSpaceToLight(line.end);
+        let endLM = [projectedLightSpaceToLightMap(lightSpaceToProjected(end)), end[1]];
+        if (startLM[0] > endLM[0]) {
+            let tempLM = startLM;
+            startLM = endLM;
+            endLM = tempLM;
+        }
+        if (endLM[0] < 0 || startLM[0] >= LIGHTMAP_WIDTH) {
+            continue;
+        }
+        const clippedStartX = clamp(startLM[0], 0, LIGHTMAP_WIDTH - 1);
+        const clippedEndX = clamp(endLM[0], 0, LIGHTMAP_WIDTH - 1);
+        const startDepth = startLM[1];
+        const endDepth = endLM[1];
+        const depthDelta = endDepth - startDepth;
+        for (let x = clippedStartX; x <= clippedEndX; x++) {
+            const pct = (x - startLM[0]) / (endLM[0] - startLM[0]);
+            const depth = startDepth + (depthDelta * pct);
+            if (depth < SPOTLIGHT.focalLength) {
+                // It's behind the light's near clipping plane.
+                continue;
+            }
+            if (depth < lightmapView[x]) {
+                lightmapView[x] = depth;
+            }
+        }
+    }
+    state.lightMap = lightmapView;
+}
+
 function pointToStr([x, y]: Point2D): string {
     return `(${x}, ${y})`
 }
@@ -60,10 +103,17 @@ function pointToStr([x, y]: Point2D): string {
 function updateTextDisplay() {
     if (state.cursor) {
         const lightPoint = clipSpaceToLight(state.cursor);
+        const projectedLight = lightSpaceToProjected(lightPoint);
+        const lightMap = projectedLightSpaceToLightMap(projectedLight);
+        let isLit = false;
+        if (state.lightMap && lightMap >= 0 && lightMap < LIGHTMAP_WIDTH) {
+            isLit = state.lightMap[lightMap] > lightPoint[1]
+        }
         textDisplay.textContent = [
             `clip space: ${pointToStr(state.cursor)}`,
             `light space: ${pointToStr(lightPoint)}`,
-            `projected light space: ${lightSpaceToProjected(lightPoint)}`
+            `projected light space: ${projectedLight}`,
+            `is lit: ${isLit}`
         ].join('\n');
     } else {
         textDisplay.textContent = "";
@@ -71,6 +121,7 @@ function updateTextDisplay() {
 }
 
 function update() {
+    updateLightmap();
     drawCanvas();
     updateTextDisplay();
 }
@@ -101,6 +152,20 @@ function lightSpaceToProjected(point: Point2D): number {
     const [x, y] = multiply(point, scaleFactor);
     const projected = x * scaledFocalLength / y;
     return projected;
+}
+
+function clamp(value: number, min: number, max: number): number {
+    if (value < min) {
+        return min;
+    }
+    if (value > max) {
+        return max;
+    }
+    return value;
+}
+
+function projectedLightSpaceToLightMap(x: number): number {
+    return Math.floor((x + 1) / 2 * LIGHTMAP_WIDTH);
 }
 
 function clipPointFromMouseEvent(event: MouseEvent): Point2D {
