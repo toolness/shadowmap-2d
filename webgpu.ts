@@ -17,6 +17,12 @@ if (!adapter) {
 
 const device = await adapter.requestDevice();
 
+const context = canvas.getContext("webgpu")!;
+
+const canvasFormat = navigator.gpu.getPreferredCanvasFormat();
+
+context.configure({device, format: canvasFormat});
+
 async function fetchShader(device: GPUDevice, filename: string): Promise<GPUShaderModule> {
     const response = await fetch(filename);
     if (!response.ok) {
@@ -34,7 +40,7 @@ const shaders = await fetchShader(device, "shaders.wgsl");
 const vertices = new Float32Array([
     0.0, 0.1,
     0.75, 0.9,
-    -0.8, 0.5,
+    -1.0, 0.5,
     1.0, 0.5,
 ]);
 
@@ -87,6 +93,13 @@ const pipeline = device.createRenderPipeline({
         entryPoint: "vertexMain",
         buffers: [vertexBufferLayout]
     },
+    fragment: {
+        module: shaders,
+        entryPoint: "fragmentMain",
+        targets: [{
+            format: canvasFormat
+        }],
+    }
 });
 
 const stagingBufferSize = WIDTH * HEIGHT * 4;
@@ -99,7 +112,14 @@ function draw() {
     const encoder = device.createCommandEncoder();
 
     const pass = encoder.beginRenderPass({
-        colorAttachments: [],
+        colorAttachments: [{
+            view: context.getCurrentTexture().createView(),
+            loadOp: "clear",
+            clearValue: {
+                r: 0, g: 0, b: 0, a: 1
+            },
+            storeOp: "store"
+        }],
         depthStencilAttachment: {
             view: depthView,
             depthLoadOp: "clear",
