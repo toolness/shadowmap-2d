@@ -17,5 +17,6 @@ fn vertexMain(@location(0) pos: vec2f, @builtin(vertex_index) vertex: u32) -> Ve
 
 @fragment
 fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
-    return input.color;
+    let z = 1 - input.pos.z;
+    return vec4f(z, z, z, 1);
 }
