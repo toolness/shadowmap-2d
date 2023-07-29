@@ -1,7 +1,7 @@
-const canvas = document.querySelector("canvas")!;
+const shadowMapCanvas = document.getElementById("shadow-map-canvas") as HTMLCanvasElement;
 
-const WIDTH = canvas.width;
-const HEIGHT = canvas.height;
+const SHADOW_MAP_WIDTH = shadowMapCanvas.width;
+const SHADOW_MAP_HEIGHT = shadowMapCanvas.height;
 
 if (!navigator.gpu) {
     throw new Error("WebGPU not supported on this browser.");
@@ -17,11 +17,11 @@ if (!adapter) {
 
 const device = await adapter.requestDevice();
 
-const context = canvas.getContext("webgpu")!;
+const shadowMapContext = shadowMapCanvas.getContext("webgpu")!;
 
 const canvasFormat = navigator.gpu.getPreferredCanvasFormat();
 
-context.configure({device, format: canvasFormat});
+shadowMapContext.configure({device, format: canvasFormat});
 
 async function fetchShader(device: GPUDevice, filename: string): Promise<GPUShaderModule> {
     const response = await fetch(filename);
@@ -37,22 +37,22 @@ async function fetchShader(device: GPUDevice, filename: string): Promise<GPUShad
 
 const shaders = await fetchShader(device, "shaders.wgsl");
 
-const vertices = new Float32Array([
+const wallVertices = new Float32Array([
     0.0, 0.1,
     0.75, 0.9,
     -0.8, 0.5,
     1.0, 0.5,
 ]);
 
-const vertexBuffer = device.createBuffer({
-    label: "Line vertices",
-    size: vertices.byteLength,
+const wallVertexBuffer = device.createBuffer({
+    label: "Wall vertex buffer",
+    size: wallVertices.byteLength,
     usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
 });
 
-device.queue.writeBuffer(vertexBuffer, 0, vertices);
+device.queue.writeBuffer(wallVertexBuffer, 0, wallVertices);
 
-const vertexBufferLayout: GPUVertexBufferLayout = {
+const wallVertexBufferLayout: GPUVertexBufferLayout = {
     arrayStride: 8,
     attributes: [{
         format: "float32x2",
@@ -61,11 +61,11 @@ const vertexBufferLayout: GPUVertexBufferLayout = {
     }]
 };
 
-const depthTexture = device.createTexture({
-    label: "Depth texture",
+const shadowMapDepthTexture = device.createTexture({
+    label: "Shadow map depth texture",
     size: {
-        width: WIDTH,
-        height: HEIGHT,
+        width: SHADOW_MAP_WIDTH,
+        height: SHADOW_MAP_HEIGHT,
         depthOrArrayLayers: 1
     },
     mipLevelCount: 1,
@@ -75,16 +75,14 @@ const depthTexture = device.createTexture({
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC
 });
 
-const depthView = depthTexture.createView();
-
-const pipelineLayout = device.createPipelineLayout({
-    label: "Pipeline layout",
+const shadowMapPipelineLayout = device.createPipelineLayout({
+    label: "Shadow map pipeline layout",
     bindGroupLayouts: []
 });
 
-const pipeline = device.createRenderPipeline({
-    label: "shadowMap",
-    layout: pipelineLayout,
+const shadowMapPipeline = device.createRenderPipeline({
+    label: "Shadow map pipeline",
+    layout: shadowMapPipelineLayout,
     depthStencil: {
         format: "depth32float",
         depthWriteEnabled: true,
@@ -95,30 +93,30 @@ const pipeline = device.createRenderPipeline({
     },
     vertex: {
         module: shaders,
-        entryPoint: "vertexMain",
-        buffers: [vertexBufferLayout]
+        entryPoint: "vertexShadowMap",
+        buffers: [wallVertexBufferLayout]
     },
     fragment: {
         module: shaders,
-        entryPoint: "fragmentMain",
+        entryPoint: "fragmentShadowMap",
         targets: [{
             format: canvasFormat
         }],
     }
 });
 
-const stagingBufferSize = WIDTH * HEIGHT * 4;
-const stagingBuffer = device.createBuffer({
-    size: stagingBufferSize,
+const shadowMapStagingBufferSize = SHADOW_MAP_WIDTH * SHADOW_MAP_HEIGHT * 4;
+const shadowMapStagingBuffer = device.createBuffer({
+    size: shadowMapStagingBufferSize,
     usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
-})
+});
 
 function draw() {
     const encoder = device.createCommandEncoder();
 
     const pass = encoder.beginRenderPass({
         colorAttachments: [{
-            view: context.getCurrentTexture().createView(),
+            view: shadowMapContext.getCurrentTexture().createView(),
             loadOp: "clear",
             clearValue: {
                 r: 0, g: 0, b: 0, a: 1
@@ -126,34 +124,34 @@ function draw() {
             storeOp: "store"
         }],
         depthStencilAttachment: {
-            view: depthView,
+            view: shadowMapDepthTexture.createView(),
             depthLoadOp: "clear",
             depthStoreOp: "store",
             depthClearValue: 1.0,
         }
     });
-    pass.setPipeline(pipeline);
-    pass.setVertexBuffer(0, vertexBuffer);
-    pass.draw(vertices.length / 2);
+    pass.setPipeline(shadowMapPipeline);
+    pass.setVertexBuffer(0, wallVertexBuffer);
+    pass.draw(wallVertices.length / 2);
     pass.end();
 
     encoder.copyTextureToBuffer({
-        texture: depthTexture
+        texture: shadowMapDepthTexture
     }, {
-        buffer: stagingBuffer
+        buffer: shadowMapStagingBuffer
     }, {
-        width: WIDTH,
-        height: HEIGHT,
+        width: SHADOW_MAP_WIDTH,
+        height: SHADOW_MAP_HEIGHT,
         depthOrArrayLayers: 1
     });
 
     device.queue.submit([encoder.finish()]);
     device.queue.onSubmittedWorkDone().then(async () => {
-        await stagingBuffer.mapAsync(GPUMapMode.READ, 0, stagingBufferSize);
-        const copyArrayBuffer = stagingBuffer.getMappedRange(0, stagingBufferSize);
+        await shadowMapStagingBuffer.mapAsync(GPUMapMode.READ, 0, shadowMapStagingBufferSize);
+        const copyArrayBuffer = shadowMapStagingBuffer.getMappedRange(0, shadowMapStagingBufferSize);
         const data = copyArrayBuffer.slice(0);
-        stagingBuffer.unmap();
-        console.log("Depth buffer", new Float32Array(data));
+        shadowMapStagingBuffer.unmap();
+        console.log("Shadow map depth buffer", new Float32Array(data));
     });
 }
 

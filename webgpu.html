@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <style>
-    canvas {
+    #shadow-map-canvas {
         width: 640px;
         image-rendering: pixelated;
     }
 </style>
 <title>Shadowmap 2D (WebGPU)</title>
-<canvas id="canvas" width="32" height="1"></canvas>
+<h1>Rendering</h1>
+<canvas id="rendering-canvas" width="256" height="256"></canvas>
+<h1>Shadow map</h1>
+<canvas id="shadow-map-canvas" width="32" height="1"></canvas>
 <pre id="display"></pre>
 <script type="module" src="webgpu.js"></script>
