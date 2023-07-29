@@ -72,7 +72,7 @@ const depthTexture = device.createTexture({
     sampleCount: 1,
     dimension: "2d",
     format: "depth32float",
-    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING
+    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC
 });
 
 const depthView = depthTexture.createView();
@@ -102,6 +102,12 @@ const pipeline = device.createRenderPipeline({
     }
 });
 
+const stagingBufferSize = WIDTH * HEIGHT * 4;
+const stagingBuffer = device.createBuffer({
+    size: stagingBufferSize,
+    usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
+})
+
 function draw() {
     const encoder = device.createCommandEncoder();
 
@@ -126,7 +132,24 @@ function draw() {
     pass.draw(vertices.length / 2);
     pass.end();
 
+    encoder.copyTextureToBuffer({
+        texture: depthTexture
+    }, {
+        buffer: stagingBuffer
+    }, {
+        width: WIDTH,
+        height: HEIGHT,
+        depthOrArrayLayers: 1
+    });
+
     device.queue.submit([encoder.finish()]);
+    device.queue.onSubmittedWorkDone().then(async () => {
+        await stagingBuffer.mapAsync(GPUMapMode.READ, 0, stagingBufferSize);
+        const copyArrayBuffer = stagingBuffer.getMappedRange(0, stagingBufferSize);
+        const data = copyArrayBuffer.slice(0);
+        stagingBuffer.unmap();
+        console.log("Depth buffer", new Float32Array(data));
+    });
 }
 
 draw();
