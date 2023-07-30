@@ -164,10 +164,10 @@ const renderingPipeline = device.createRenderPipeline({
 });
 
 const wallVertices = new Float32Array([
-    0.0, 0.1,
-    0.75, 0.9,
-    -0.8, 0.5,
-    1.0, 0.5,
+    0.25, 0.25,
+    0.75, 0.25,
+    -0.25, -0.25,
+    -0.75, -0.25
 ]);
 
 const wallVertexBuffer = device.createBuffer({
@@ -203,9 +203,20 @@ const shadowMapDepthTexture = device.createTexture({
 
 const shadowMapDepthTextureView = shadowMapDepthTexture.createView();
 
+const shadowMapBindGroupLayout = device.createBindGroupLayout({
+    label: "Shadow map bind group layout",
+    entries: [{
+        binding: 2,
+        visibility: GPUShaderStage.VERTEX,
+        buffer: {
+            type: "read-only-storage"
+        }
+    }]
+});
+
 const shadowMapPipelineLayout = device.createPipelineLayout({
     label: "Shadow map pipeline layout",
-    bindGroupLayouts: []
+    bindGroupLayouts: [shadowMapBindGroupLayout]
 });
 
 const shadowMapPipeline = device.createRenderPipeline({
@@ -237,6 +248,17 @@ const shadowMapStagingBufferSize = SHADOW_MAP_WIDTH * SHADOW_MAP_HEIGHT * 4;
 const shadowMapStagingBuffer = device.createBuffer({
     size: shadowMapStagingBufferSize,
     usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
+});
+
+const shadowMapBindGroup = device.createBindGroup({
+    label: "Shadow map bind group",
+    layout: shadowMapBindGroupLayout,
+    entries: [{
+        binding: 2,
+        resource: {
+            buffer: spotlightDataBuffer
+        }
+    }]
 });
 
 const renderingBindGroup = device.createBindGroup({
@@ -277,6 +299,7 @@ function draw() {
     });
     shadowMapPass.setPipeline(shadowMapPipeline);
     shadowMapPass.setVertexBuffer(0, wallVertexBuffer);
+    shadowMapPass.setBindGroup(0, shadowMapBindGroup);
     shadowMapPass.draw(wallVertices.length / 2);
     shadowMapPass.end();
 
