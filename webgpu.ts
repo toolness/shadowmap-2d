@@ -83,7 +83,7 @@ const spotlightDataBuffer = device.createBuffer({
 });
 
 function updateSpotlightFromInputs() {
-    spotlight.rotation = degreesToRadians(rotationInput.valueAsNumber);
+    spotlight.rotation = (Math.PI / 2) - degreesToRadians(rotationInput.valueAsNumber);
 }
 
 function updateSpotlightDataBuffer() {
@@ -368,7 +368,7 @@ function draw() {
 }
 
 function updateAndDraw() {
-    getLabelFor(rotationInput).textContent = `Rotation (${rotationInput.value})`
+    getLabelFor(rotationInput).textContent = `Rotation (${rotationInput.value}°)`
     updateSpotlightFromInputs();
     updateSpotlightDataBuffer();
     draw();
