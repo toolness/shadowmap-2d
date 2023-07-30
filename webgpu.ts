@@ -53,29 +53,30 @@ type Spotlight2D = {
     fieldOfView: number
 }
 
-const SPOTLIGHT: Spotlight2D = {
+const spotlight: Spotlight2D = {
     pos: [0, -1],
     rotation: Math.PI / 2,
     focalLength: 0.1,
     fieldOfView: Math.PI / 3
 }
 
-const spotlightData = new Float32Array([
-    ...SPOTLIGHT.pos,
-    SPOTLIGHT.rotation,
-    SPOTLIGHT.focalLength,
-    SPOTLIGHT.fieldOfView,
-    // Implicit struct size padding.
-    0
-]);
-
 const spotlightDataBuffer = device.createBuffer({
     label: "Spotlight data buffer",
-    size: spotlightData.byteLength,
+    size: 24,
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
 });
 
-device.queue.writeBuffer(spotlightDataBuffer, 0, spotlightData);
+function updateSpotlightDataBuffer() {
+    const spotlightData = new Float32Array([
+        ...spotlight.pos,
+        spotlight.rotation,
+        spotlight.focalLength,
+        spotlight.fieldOfView,
+        // Implicit struct size padding.
+        0
+    ]);
+    device.queue.writeBuffer(spotlightDataBuffer, 0, spotlightData);
+}
 
 const shaders = await fetchShader(device, "shaders.wgsl");
 
@@ -346,6 +347,7 @@ function draw() {
     }
 }
 
+updateSpotlightDataBuffer();
 draw();
 
 export {}
