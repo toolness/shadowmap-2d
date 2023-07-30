@@ -34,21 +34,38 @@ fn fragmentShadowMap(input: ShadowMapVertexOutput) -> @location(0) vec4f {
 
 struct RenderingVertexOutput {
     @builtin(position) pos: vec4f,
-    @location(0) uv: vec2f
+    @location(0) clip_space_pos: vec2f
 }
 
 @vertex
 fn vertexRendering(@location(0) pos: vec2f) -> RenderingVertexOutput {
     var output: RenderingVertexOutput;
     output.pos = vec4f(pos, 0, 1);
-    output.uv = (pos + 1) / 2;
+
+    // This looks redundant, since it's a subset of `output.pos`, but
+    // `output.pos` will actually get transformed into device-space coordinates
+    // by the time it reaches our fragment shader.
+    output.clip_space_pos = pos;
+
     return output;
 }
 
 @fragment
 fn fragmentRendering(input: RenderingVertexOutput) -> @location(0) vec4f {
-    let depth = 1 - textureSample(shadowMap, shadowMapSampler, vec2(input.uv.x, 0));
-    return vec4f(depth, depth, depth, 1);
+    let light_point = clipSpaceToLight(input.clip_space_pos);
+    let projected_light_point = lightSpaceToProjected(light_point);
+    let u = (projected_light_point.x + 1) / 2;
+    let depth = projected_light_point.z;
+    var is_lit: bool = false;
+    let shadow_depth = textureSample(shadowMap, shadowMapSampler, vec2(u, 0));
+    if (u >= 0 && u <= 1 && depth >= 0 && depth <= 1) {
+        is_lit = shadow_depth > depth;
+    }
+    if is_lit {
+        return vec4f(0.5, 0.5, 0.5, 1);
+    } else {
+        return vec4f(0, 0, 0, 1);
+    }
 }
 
 fn clipSpaceToLight(point: vec2<f32>) -> vec2<f32> {
