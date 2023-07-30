@@ -6,6 +6,8 @@ const RENDERING_HEIGHT = renderingCanvas.height;
 const SHADOW_MAP_WIDTH = shadowMapCanvas.width;
 const SHADOW_MAP_HEIGHT = shadowMapCanvas.height;
 
+const LOG_SHADOW_MAP_TO_CONSOLE = false
+
 if (!navigator.gpu) {
     throw new Error("WebGPU not supported on this browser.");
 }
@@ -245,10 +247,10 @@ const shadowMapPipeline = device.createRenderPipeline({
 });
 
 const shadowMapStagingBufferSize = SHADOW_MAP_WIDTH * SHADOW_MAP_HEIGHT * 4;
-const shadowMapStagingBuffer = device.createBuffer({
+const shadowMapStagingBuffer = LOG_SHADOW_MAP_TO_CONSOLE ? device.createBuffer({
     size: shadowMapStagingBufferSize,
     usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
-});
+}) : undefined;
 
 const shadowMapBindGroup = device.createBindGroup({
     label: "Shadow map bind group",
@@ -303,15 +305,17 @@ function draw() {
     shadowMapPass.draw(wallVertices.length / 2);
     shadowMapPass.end();
 
-    encoder.copyTextureToBuffer({
-        texture: shadowMapDepthTexture
-    }, {
-        buffer: shadowMapStagingBuffer
-    }, {
-        width: SHADOW_MAP_WIDTH,
-        height: SHADOW_MAP_HEIGHT,
-        depthOrArrayLayers: 1
-    });
+    if (shadowMapStagingBuffer) {
+        encoder.copyTextureToBuffer({
+            texture: shadowMapDepthTexture
+        }, {
+            buffer: shadowMapStagingBuffer
+        }, {
+            width: SHADOW_MAP_WIDTH,
+            height: SHADOW_MAP_HEIGHT,
+            depthOrArrayLayers: 1
+        });
+    }
 
     const renderingPass = encoder.beginRenderPass({
         colorAttachments: [{
@@ -330,13 +334,16 @@ function draw() {
     renderingPass.end();
 
     device.queue.submit([encoder.finish()]);
-    device.queue.onSubmittedWorkDone().then(async () => {
-        await shadowMapStagingBuffer.mapAsync(GPUMapMode.READ, 0, shadowMapStagingBufferSize);
-        const copyArrayBuffer = shadowMapStagingBuffer.getMappedRange(0, shadowMapStagingBufferSize);
-        const data = copyArrayBuffer.slice(0);
-        shadowMapStagingBuffer.unmap();
-        console.log("Shadow map depth buffer", new Float32Array(data));
-    });
+
+    if (shadowMapStagingBuffer) {
+        device.queue.onSubmittedWorkDone().then(async () => {
+            await shadowMapStagingBuffer.mapAsync(GPUMapMode.READ, 0, shadowMapStagingBufferSize);
+            const copyArrayBuffer = shadowMapStagingBuffer.getMappedRange(0, shadowMapStagingBufferSize);
+            const data = copyArrayBuffer.slice(0);
+            shadowMapStagingBuffer.unmap();
+            console.log("Shadow map depth buffer", new Float32Array(data));
+        });
+    }
 }
 
 draw();
