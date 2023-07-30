@@ -1,5 +1,13 @@
 @group(0) @binding(0) var shadowMapSampler: sampler;
 @group(0) @binding(1) var shadowMap: texture_depth_2d;
+@group(0) @binding(2) var<storage, read> spotlight: Spotlight;
+
+struct Spotlight {
+    pos: vec2<f32>,
+    rotation: f32,
+    focal_length: f32,
+    field_of_view: f32,
+}
 
 struct ShadowMapVertexOutput {
     @builtin(position) pos: vec4f,

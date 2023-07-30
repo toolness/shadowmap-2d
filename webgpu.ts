@@ -42,6 +42,39 @@ async function fetchShader(device: GPUDevice, filename: string): Promise<GPUShad
     });
 }
 
+type Point2D = [number, number];
+
+type Spotlight2D = {
+    pos: Point2D,
+    rotation: number,
+    focalLength: number,
+    fieldOfView: number
+}
+
+const SPOTLIGHT: Spotlight2D = {
+    pos: [0, -1],
+    rotation: Math.PI / 2,
+    focalLength: 0.1,
+    fieldOfView: Math.PI / 3
+}
+
+const spotlightData = new Float32Array([
+    ...SPOTLIGHT.pos,
+    SPOTLIGHT.rotation,
+    SPOTLIGHT.focalLength,
+    SPOTLIGHT.fieldOfView,
+    // Implicit struct size padding.
+    0
+]);
+
+const spotlightDataBuffer = device.createBuffer({
+    label: "Spotlight data buffer",
+    size: spotlightData.byteLength,
+    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
+});
+
+device.queue.writeBuffer(spotlightDataBuffer, 0, spotlightData);
+
 const shaders = await fetchShader(device, "shaders.wgsl");
 
 const renderingVertices = new Float32Array([
@@ -98,6 +131,12 @@ const renderingBindGroupLayout = device.createBindGroupLayout({
             sampleType: "depth",
             viewDimension: "2d",
             multisampled: false
+        }
+    }, {
+        binding: 2,
+        visibility: GPUShaderStage.FRAGMENT,
+        buffer: {
+            type: "read-only-storage"
         }
     }]
 });
@@ -209,6 +248,11 @@ const renderingBindGroup = device.createBindGroup({
     }, {
         binding: 1,
         resource: shadowMapDepthTextureView
+    }, {
+        binding: 2,
+        resource: {
+            buffer: spotlightDataBuffer
+        }
     }]
 });
 
