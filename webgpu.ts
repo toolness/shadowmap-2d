@@ -1,5 +1,6 @@
 const shadowMapCanvas = document.getElementById("shadow-map-canvas") as HTMLCanvasElement;
 const renderingCanvas = document.getElementById("rendering-canvas") as HTMLCanvasElement;
+const rotationInput = document.getElementById("rotation") as HTMLInputElement;
 
 const RENDERING_WIDTH = renderingCanvas.width;
 const RENDERING_HEIGHT = renderingCanvas.height;
@@ -18,6 +19,17 @@ const adapter = await navigator.gpu.requestAdapter({
 
 if (!adapter) {
     throw new Error("No appropriate GPUAdapter found.");
+}
+
+function getLabelFor(element: HTMLElement): HTMLLabelElement {
+    if (!element.id) {
+        throw new Error("Element does not have an ID");
+    }
+    const label = document.querySelector(`label[for="${element.id}"]`) as HTMLLabelElement|null;
+    if (!label) {
+        throw new Error(`Label not found for #${element.id}`);
+    }
+    return label;
 }
 
 const device = await adapter.requestDevice();
@@ -44,6 +56,10 @@ async function fetchShader(device: GPUDevice, filename: string): Promise<GPUShad
     });
 }
 
+function degreesToRadians(degrees: number): number {
+    return degrees * Math.PI / 180;
+}
+
 type Point2D = [number, number];
 
 type Spotlight2D = {
@@ -65,6 +81,10 @@ const spotlightDataBuffer = device.createBuffer({
     size: 24,
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
 });
+
+function updateSpotlightFromInputs() {
+    spotlight.rotation = degreesToRadians(rotationInput.valueAsNumber);
+}
 
 function updateSpotlightDataBuffer() {
     const spotlightData = new Float32Array([
@@ -347,7 +367,15 @@ function draw() {
     }
 }
 
-updateSpotlightDataBuffer();
-draw();
+function updateAndDraw() {
+    getLabelFor(rotationInput).textContent = `Rotation (${rotationInput.value})`
+    updateSpotlightFromInputs();
+    updateSpotlightDataBuffer();
+    draw();
+}
+
+updateAndDraw();
+
+rotationInput.oninput = updateAndDraw;
 
 export {}
