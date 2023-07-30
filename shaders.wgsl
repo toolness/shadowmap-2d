@@ -62,7 +62,8 @@ fn fragmentRendering(input: RenderingVertexOutput) -> @location(0) vec4f {
         is_lit = shadow_depth > depth;
     }
     if is_lit {
-        return vec4f(0.5, 0.5, 0.5, 1);
+        let distance_from_light = 1 - clamp(distance(vec2(), light_point) / MAX_Z_FROM_LIGHT, 0, 1);
+        return vec4f(distance_from_light, distance_from_light, distance_from_light, 1);
     } else {
         return vec4f(0, 0, 0, 1);
     }
