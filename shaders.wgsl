@@ -20,9 +20,9 @@ struct ShadowMapVertexOutput {
 @vertex
 fn vertexShadowMap(@location(0) pos: vec2f) -> ShadowMapVertexOutput {
     let light_pos = clipSpaceToLight(pos);
-    let projected_light_pos = lightSpaceToProjected(light_pos);
+    let projected_light_pos = lightSpaceToProjectedVec4(light_pos);
     var output: ShadowMapVertexOutput;
-    output.pos = vec4f(projected_light_pos, 1);
+    output.pos = projected_light_pos;
     return output;
 }
 
@@ -53,7 +53,7 @@ fn vertexRendering(@location(0) pos: vec2f) -> RenderingVertexOutput {
 @fragment
 fn fragmentRendering(input: RenderingVertexOutput) -> @location(0) vec4f {
     let light_point = clipSpaceToLight(input.clip_space_pos);
-    let projected_light_point = lightSpaceToProjected(light_point);
+    let projected_light_point = lightSpaceToProjectedVec3(light_point);
     let u = (projected_light_point.x + 1) / 2;
     let depth = projected_light_point.z;
     var is_lit: bool = false;
@@ -86,12 +86,19 @@ fn rotatePoint(point: vec2<f32>, angle: f32, origin: vec2<f32>) -> vec2<f32> {
     return rotated_point + origin;
 }
 
-fn lightSpaceToProjected(point: vec2<f32>) -> vec3<f32> {
+fn lightSpaceToProjectedVec3(point: vec2<f32>) -> vec3<f32> {
+    let p = lightSpaceToProjectedVec4(point);
+    return vec3(p.x / p.w, 0, p.z / p.w);
+}
+
+fn lightSpaceToProjectedVec4(point: vec2<f32>) -> vec4<f32> {
     let half_angle = spotlight.field_of_view / 2;
     let right_extent = spotlight.focal_length * tan(half_angle);
     let scale_factor = 1 / right_extent;
     let scaled_focal_length = spotlight.focal_length * scale_factor;
     let scaled_point = point * scale_factor;
-    let projected = scaled_point.x * scaled_focal_length / scaled_point.y;
-    return vec3(projected, 0, point.y / MAX_Z_FROM_LIGHT);
+    let projected = scaled_point.x * scaled_focal_length;
+    // Set W to let the GPU perform the perspective projection, as it will
+    // also perform clipping if needed, deal with the situation where W is zero, etc.
+    return vec4(projected, 0, point.y / MAX_Z_FROM_LIGHT * scaled_point.y, scaled_point.y);
 }
