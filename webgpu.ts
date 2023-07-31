@@ -1,6 +1,7 @@
 const shadowMapCanvas = document.getElementById("shadow-map-canvas") as HTMLCanvasElement;
 const renderingCanvas = document.getElementById("rendering-canvas") as HTMLCanvasElement;
 const rotationInput = document.getElementById("rotation") as HTMLInputElement;
+const statsPre = document.getElementById("stats") as HTMLPreElement;
 
 const RENDERING_WIDTH = renderingCanvas.width;
 const RENDERING_HEIGHT = renderingCanvas.height;
@@ -302,6 +303,8 @@ const renderingBindGroup = device.createBindGroup({
 });
 
 function draw() {
+    const renderStart = performance.now()
+
     const encoder = device.createCommandEncoder();
 
     const shadowMapPass = encoder.beginRenderPass({
@@ -355,6 +358,11 @@ function draw() {
     renderingPass.end();
 
     device.queue.submit([encoder.finish()]);
+
+    device.queue.onSubmittedWorkDone().then(() => {
+        const renderTime = Math.ceil(performance.now() - renderStart);
+        statsPre.textContent = `Frame render time: ${renderTime} ms`;
+    })
 
     if (shadowMapStagingBuffer) {
         device.queue.onSubmittedWorkDone().then(async () => {
