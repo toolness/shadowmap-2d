@@ -378,4 +378,25 @@ updateAndDraw();
 
 rotationInput.oninput = updateAndDraw;
 
+window.addEventListener('keydown', e => {
+    const key = e.key.toLowerCase();
+    const MOVE_AMOUNT = 0.05;
+    let xDelta = 0;
+    let yDelta = 0;
+    if (key === 'w') {
+        yDelta = 1;
+    } else if (key === 's') {
+        yDelta = -1;
+    } else if (key === 'a') {
+        xDelta = -1;
+    } else if (key === 'd') {
+        xDelta = 1;
+    }
+    if (xDelta || yDelta) {
+        spotlight.pos[0] += xDelta * MOVE_AMOUNT;
+        spotlight.pos[1] += yDelta * MOVE_AMOUNT;
+        updateAndDraw();
+    }
+});
+
 export {}
