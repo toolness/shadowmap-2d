@@ -4,6 +4,7 @@ const rotationInput = document.getElementById("rotation") as HTMLInputElement;
 const focalLengthInput = document.getElementById("focal-length") as HTMLInputElement;
 const fovInput = document.getElementById("fov") as HTMLInputElement;
 const statsPre = document.getElementById("stats") as HTMLPreElement;
+const positionPre = document.getElementById("position") as HTMLPreElement;
 
 const SHADOW_MAP_WIDTH = shadowMapCanvas.width;
 const SHADOW_MAP_HEIGHT = shadowMapCanvas.height;
@@ -386,6 +387,7 @@ function updateAndDraw() {
     getLabelFor(rotationInput).textContent = `Rotation (${rotationInput.value}°)`;
     getLabelFor(focalLengthInput).textContent = `Focal length (${focalLengthInput.value})`;
     getLabelFor(fovInput).textContent = `Field of view (${fovInput.value}°)`;
+    positionPre.textContent = `Position: (${spotlight.pos[0].toFixed(2)}, ${spotlight.pos[1].toFixed(2)})`;
 }
 
 updateAndDraw();
