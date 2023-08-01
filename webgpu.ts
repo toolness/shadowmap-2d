@@ -1,6 +1,7 @@
 const shadowMapCanvas = document.getElementById("shadow-map-canvas") as HTMLCanvasElement;
 const renderingCanvas = document.getElementById("rendering-canvas") as HTMLCanvasElement;
 const rotationInput = document.getElementById("rotation") as HTMLInputElement;
+const focalLengthInput = document.getElementById("focal-length") as HTMLInputElement;
 const statsPre = document.getElementById("stats") as HTMLPreElement;
 
 const RENDERING_WIDTH = renderingCanvas.width;
@@ -85,6 +86,7 @@ const spotlightDataBuffer = device.createBuffer({
 
 function updateSpotlightFromInputs() {
     spotlight.rotation = (Math.PI / 2) - degreesToRadians(rotationInput.valueAsNumber);
+    spotlight.focalLength = focalLengthInput.valueAsNumber;
 }
 
 function updateSpotlightDataBuffer() {
@@ -376,7 +378,8 @@ function draw() {
 }
 
 function updateAndDraw() {
-    getLabelFor(rotationInput).textContent = `Rotation (${rotationInput.value}°)`
+    getLabelFor(rotationInput).textContent = `Rotation (${rotationInput.value}°)`;
+    getLabelFor(focalLengthInput).textContent = `Focal length (${focalLengthInput.value})`;
     updateSpotlightFromInputs();
     updateSpotlightDataBuffer();
     draw();
@@ -385,6 +388,7 @@ function updateAndDraw() {
 updateAndDraw();
 
 rotationInput.oninput = updateAndDraw;
+focalLengthInput.oninput = updateAndDraw;
 
 window.addEventListener('keydown', e => {
     const key = e.key.toLowerCase();

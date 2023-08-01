@@ -8,6 +8,14 @@
     label {
         display: block;
     }
+
+    /**
+     * Changing this doesn't actually affect the rendering right now,
+     * so I'm hiding it to reduce clutter.
+     */
+    #focal-length, label[for="focal-length"] {
+        display: none;
+    }
 </style>
 <title>Shadowmap 2D (WebGPU)</title>
 <h1>Rendering</h1>
@@ -15,6 +23,8 @@
 <div>
     <label for="rotation"></label>
     <input type="range" id="rotation" min="-180" max="180" value="0">
+    <label for="focal-length"></label>
+    <input type="range" id="focal-length" min="0.05" max="1.0" step="0.05" value="0.1">
 </div>
 <p>Use the WASD keys to move the spotlight.</p>
 <pre id="stats"></pre>
