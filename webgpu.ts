@@ -11,6 +11,17 @@ const SHADOW_MAP_HEIGHT = shadowMapCanvas.height;
 
 const LOG_SHADOW_MAP_TO_CONSOLE = false
 
+const SPOTLIGHT_INITIAL_POS: Point2D = [0, -1];
+
+const WALL_VERTICES = new Float32Array([
+    0.25, 0.25,
+    0.75, 0.25,
+    -0.25, -0.25,
+    -0.75, -0.25,
+    0.25, -0.25,
+    0.25, -0.5,
+]);
+
 if (!navigator.gpu) {
     throw new Error("WebGPU not supported on this browser.");
 }
@@ -72,10 +83,11 @@ type Spotlight2D = {
 }
 
 const spotlight: Spotlight2D = {
-    pos: [0, -1],
-    rotation: Math.PI / 2,
-    focalLength: 0.1,
-    fieldOfView: Math.PI / 3
+    pos: SPOTLIGHT_INITIAL_POS,
+    // These values are all retrieved from the DOM.
+    rotation: 0,
+    focalLength: 0,
+    fieldOfView: 0
 }
 
 const spotlightDataBuffer = device.createBuffer({
@@ -104,6 +116,9 @@ function updateSpotlightDataBuffer() {
 
 const shaders = await fetchShader(device, "shaders.wgsl");
 
+/**
+ * The rendering is just a square that covers the entire clip space.
+ */
 const renderingVertices = new Float32Array([
     // X,   Y
     -1.0,  1.0,
@@ -190,22 +205,13 @@ const renderingPipeline = device.createRenderPipeline({
     }
 });
 
-const wallVertices = new Float32Array([
-    0.25, 0.25,
-    0.75, 0.25,
-    -0.25, -0.25,
-    -0.75, -0.25,
-    0.25, -0.25,
-    0.25, -0.5,
-]);
-
 const wallVertexBuffer = device.createBuffer({
     label: "Wall vertex buffer",
-    size: wallVertices.byteLength,
+    size: WALL_VERTICES.byteLength,
     usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
 });
 
-device.queue.writeBuffer(wallVertexBuffer, 0, wallVertices);
+device.queue.writeBuffer(wallVertexBuffer, 0, WALL_VERTICES);
 
 const wallVertexBufferLayout: GPUVertexBufferLayout = {
     arrayStride: 8,
@@ -331,7 +337,7 @@ function draw() {
     shadowMapPass.setPipeline(shadowMapPipeline);
     shadowMapPass.setVertexBuffer(0, wallVertexBuffer);
     shadowMapPass.setBindGroup(0, shadowMapBindGroup);
-    shadowMapPass.draw(wallVertices.length / 2);
+    shadowMapPass.draw(WALL_VERTICES.length / 2);
     shadowMapPass.end();
 
     if (shadowMapStagingBuffer) {
