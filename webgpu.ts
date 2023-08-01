@@ -2,10 +2,9 @@ const shadowMapCanvas = document.getElementById("shadow-map-canvas") as HTMLCanv
 const renderingCanvas = document.getElementById("rendering-canvas") as HTMLCanvasElement;
 const rotationInput = document.getElementById("rotation") as HTMLInputElement;
 const focalLengthInput = document.getElementById("focal-length") as HTMLInputElement;
+const fovInput = document.getElementById("fov") as HTMLInputElement;
 const statsPre = document.getElementById("stats") as HTMLPreElement;
 
-const RENDERING_WIDTH = renderingCanvas.width;
-const RENDERING_HEIGHT = renderingCanvas.height;
 const SHADOW_MAP_WIDTH = shadowMapCanvas.width;
 const SHADOW_MAP_HEIGHT = shadowMapCanvas.height;
 
@@ -87,6 +86,7 @@ const spotlightDataBuffer = device.createBuffer({
 function updateSpotlightFromInputs() {
     spotlight.rotation = (Math.PI / 2) - degreesToRadians(rotationInput.valueAsNumber);
     spotlight.focalLength = focalLengthInput.valueAsNumber;
+    spotlight.fieldOfView = degreesToRadians(fovInput.valueAsNumber);
 }
 
 function updateSpotlightDataBuffer() {
@@ -383,12 +383,14 @@ function updateAndDraw() {
     draw();
     getLabelFor(rotationInput).textContent = `Rotation (${rotationInput.value}°)`;
     getLabelFor(focalLengthInput).textContent = `Focal length (${focalLengthInput.value})`;
+    getLabelFor(fovInput).textContent = `Field of view (${fovInput.value}°)`;
 }
 
 updateAndDraw();
 
 rotationInput.oninput = updateAndDraw;
 focalLengthInput.oninput = updateAndDraw;
+fovInput.oninput = updateAndDraw;
 
 window.addEventListener('keydown', e => {
     const key = e.key.toLowerCase();
