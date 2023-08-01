@@ -403,7 +403,6 @@ function incrementOrDecrementRotation(delta: number) {
     let rotation = rotationInput.valueAsNumber;
     const min = parseInt(rotationInput.min);
     const max = parseInt(rotationInput.max);
-    console.log({rotation, rotDelta: delta, min, max});
     if (rotation === min && delta === -1) {
         rotation = max;
     } else if (rotation === max && delta === 1) {
