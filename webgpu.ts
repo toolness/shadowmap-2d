@@ -378,11 +378,11 @@ function draw() {
 }
 
 function updateAndDraw() {
-    getLabelFor(rotationInput).textContent = `Rotation (${rotationInput.value}°)`;
-    getLabelFor(focalLengthInput).textContent = `Focal length (${focalLengthInput.value})`;
     updateSpotlightFromInputs();
     updateSpotlightDataBuffer();
     draw();
+    getLabelFor(rotationInput).textContent = `Rotation (${rotationInput.value}°)`;
+    getLabelFor(focalLengthInput).textContent = `Focal length (${focalLengthInput.value})`;
 }
 
 updateAndDraw();
