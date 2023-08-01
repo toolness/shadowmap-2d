@@ -28,13 +28,14 @@
 <canvas id="rendering-canvas" width="512" height="512"></canvas>
 <div>
     <label for="rotation"></label>
-    <input type="range" id="rotation" min="-180" max="180" value="0">
+    <input type="range" id="rotation" min="-179" max="180" value="0">
     <label for="focal-length"></label>
     <input type="range" id="focal-length" min="0.05" max="1.0" step="0.05" value="0.1">
     <label for="fov"></label>
     <input type="range" id="fov" min="5" max="130" value="60">
 </div>
 <p>Use the WASD keys to move the spotlight.</p>
+<p>Use the slider above, or the Q and E keys, to rotate the spotlight.</p>
 <pre id="stats"></pre>
 <h1>Shadow map</h1>
 <canvas id="shadow-map-canvas" width="1024" height="1"></canvas>

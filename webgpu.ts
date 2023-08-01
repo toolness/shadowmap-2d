@@ -392,11 +392,31 @@ rotationInput.oninput = updateAndDraw;
 focalLengthInput.oninput = updateAndDraw;
 fovInput.oninput = updateAndDraw;
 
+/**
+ * This only works if passed 1 or -1.
+ */
+function incrementOrDecrementRotation(delta: number) {
+    let rotation = rotationInput.valueAsNumber;
+    const min = parseInt(rotationInput.min);
+    const max = parseInt(rotationInput.max);
+    console.log({rotation, rotDelta: delta, min, max});
+    if (rotation === min && delta === -1) {
+        rotation = max;
+    } else if (rotation === max && delta === 1) {
+        rotation = min;
+    } else {
+        rotation += delta;
+    }
+    rotationInput.valueAsNumber = rotation;
+    updateAndDraw();
+}
+
 window.addEventListener('keydown', e => {
     const key = e.key.toLowerCase();
     const MOVE_AMOUNT = 0.05;
     let xDelta = 0;
     let yDelta = 0;
+    let rotDelta = 0;
     if (key === 'w') {
         yDelta = 1;
     } else if (key === 's') {
@@ -405,11 +425,17 @@ window.addEventListener('keydown', e => {
         xDelta = -1;
     } else if (key === 'd') {
         xDelta = 1;
+    } else if (key === 'q') {
+        rotDelta -= 1;
+    } else if (key === 'e') {
+        rotDelta += 1;
     }
     if (xDelta || yDelta) {
         spotlight.pos[0] += xDelta * MOVE_AMOUNT;
         spotlight.pos[1] += yDelta * MOVE_AMOUNT;
         updateAndDraw();
+    } else if (rotDelta) {
+        incrementOrDecrementRotation(rotDelta);
     }
 });
 
