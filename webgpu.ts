@@ -193,7 +193,9 @@ const wallVertices = new Float32Array([
     0.25, 0.25,
     0.75, 0.25,
     -0.25, -0.25,
-    -0.75, -0.25
+    -0.75, -0.25,
+    0.25, -0.25,
+    0.25, -0.5,
 ]);
 
 const wallVertexBuffer = device.createBuffer({
