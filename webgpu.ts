@@ -24,14 +24,6 @@ const WALL_VERTICES = new Float32Array([
     0.25, -0.5,
 ]);
 
-function doStuffWithMatrix() {
-    const r = mat4.rotationY(Math.PI / 2);
-    const t = mat4.translate(r, vec3.create(1, 0, 1));
-    console.log(vec4.transformMat4(vec4.create(0, 0, 0, 1), t));
-}
-
-doStuffWithMatrix();
-
 if (!navigator.gpu) {
     throw new Error("WebGPU not supported on this browser.");
 }
@@ -113,6 +105,14 @@ function updateSpotlightFromInputs() {
 }
 
 function updateSpotlightDataBuffer() {
+    const SPOTLIGHT_Z_FAR = 10;
+    const r = mat4.rotationY(-degreesToRadians(rotationInput.valueAsNumber));
+    const t = mat4.translate(r, vec3.create(-spotlight.pos[0], 0, -spotlight.pos[1]));
+    const p = mat4.perspective(spotlight.fieldOfView, 1, spotlight.focalLength, SPOTLIGHT_Z_FAR);
+    const viewProjection = mat4.multiply(p, t);
+    const transformedPoint = vec4.transformMat4(vec4.create(-1, 0, 0, 1), viewProjection);
+    console.log(transformedPoint, transformedPoint[0] / transformedPoint[3]);
+
     const spotlightData = new Float32Array([
         ...spotlight.pos,
         spotlight.rotation,
