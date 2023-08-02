@@ -1,3 +1,5 @@
+import { mat4, vec3, vec4 } from "./vendor/wgpu-matrix/wgpu-matrix.js";
+
 const shadowMapCanvas = document.getElementById("shadow-map-canvas") as HTMLCanvasElement;
 const renderingCanvas = document.getElementById("rendering-canvas") as HTMLCanvasElement;
 const rotationInput = document.getElementById("rotation") as HTMLInputElement;
@@ -21,6 +23,14 @@ const WALL_VERTICES = new Float32Array([
     0.25, -0.25,
     0.25, -0.5,
 ]);
+
+function doStuffWithMatrix() {
+    const r = mat4.rotationY(Math.PI / 2);
+    const t = mat4.translate(r, vec3.create(1, 0, 1));
+    console.log(vec4.transformMat4(vec4.create(0, 0, 0, 1), t));
+}
+
+doStuffWithMatrix();
 
 if (!navigator.gpu) {
     throw new Error("WebGPU not supported on this browser.");
