@@ -20,8 +20,8 @@ struct ShadowMapVertexOutput {
 
 @vertex
 fn vertexShadowMap(@location(0) pos: vec2f) -> ShadowMapVertexOutput {
-    let light_pos = clipSpaceToLight(pos);
-    let projected_light_pos = lightSpaceToProjectedVec4(light_pos);
+    let world_pos = vec4(pos.x, 0, pos.y, 1);
+    let projected_light_pos = spotlight.light_view_proj_matrix * world_pos;
     var output: ShadowMapVertexOutput;
     output.pos = projected_light_pos;
     return output;
@@ -29,7 +29,7 @@ fn vertexShadowMap(@location(0) pos: vec2f) -> ShadowMapVertexOutput {
 
 @fragment
 fn fragmentShadowMap(input: ShadowMapVertexOutput) -> @location(0) vec4f {
-    let z = 1 - input.pos.z;
+    let z = 1 - (input.pos.z / input.pos.w);
     return vec4f(z, z, z, 1);
 }
 

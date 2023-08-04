@@ -116,21 +116,17 @@ function updateSpotlightDataBuffer() {
     const p = mat4.perspective(spotlight.fieldOfView, 1, spotlight.focalLength, SPOTLIGHT_Z_FAR);
     const viewProjection = mat4.multiply(p, t);
     const viewProjectionData = viewProjection as Float32Array;
-    const transformedPoint = vec4.transformMat4(vec4.create(-1, 0, 0, 1), viewProjection);
-    console.log({transformedPoint, xOverW: transformedPoint[0] / transformedPoint[3], zOverW: transformedPoint[2] / transformedPoint[3]});
+    const transformedPoint = vec4.transformMat4(vec4.create(-0.25, 0, -0.25, 1), viewProjection);
+    console.log({viewProjection, transformedPoint, xOverW: transformedPoint[0] / transformedPoint[3], zOverW: transformedPoint[2] / transformedPoint[3]});
 
     const spotlightData = new Float32Array([
         ...spotlight.pos,
         spotlight.rotation,
         spotlight.focalLength,
         spotlight.fieldOfView,
-        // Implicit struct size padding.
-        0,
-        0,
-        0,
-        ...viewProjectionData
     ]);
     device.queue.writeBuffer(spotlightDataBuffer, 0, spotlightData);
+    device.queue.writeBuffer(spotlightDataBuffer, 32, viewProjectionData.buffer, viewProjectionData.byteOffset, viewProjectionData.byteLength);
 }
 
 const shaders = await fetchShader(device, "shaders.wgsl");
