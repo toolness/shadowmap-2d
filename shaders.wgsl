@@ -11,6 +11,7 @@ struct Spotlight {
     rotation: f32,
     focal_length: f32,
     field_of_view: f32,
+    light_view_proj_matrix: mat4x4<f32>,
 }
 
 struct ShadowMapVertexOutput {
