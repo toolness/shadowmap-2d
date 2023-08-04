@@ -54,7 +54,8 @@ fn vertexRendering(@location(0) pos: vec2f) -> RenderingVertexOutput {
 @fragment
 fn fragmentRendering(input: RenderingVertexOutput) -> @location(0) vec4f {
     let light_point = clipSpaceToLight(input.clip_space_pos);
-    let projected_light_point = lightSpaceToProjectedVec3(light_point);
+    let world_pos = vec4(input.clip_space_pos.x, 0, input.clip_space_pos.y, 1);
+    let projected_light_point = spotlight.light_view_proj_matrix * world_pos;
     let u = (projected_light_point.x + 1) / 2;
     let depth = projected_light_point.z;
     var is_lit: bool = false;
@@ -85,21 +86,4 @@ fn rotatePoint(point: vec2<f32>, angle: f32, origin: vec2<f32>) -> vec2<f32> {
         relative_point.y * cos_angle + relative_point.x * sin_angle
     );
     return rotated_point + origin;
-}
-
-fn lightSpaceToProjectedVec3(point: vec2<f32>) -> vec3<f32> {
-    let p = lightSpaceToProjectedVec4(point);
-    return vec3(p.x / p.w, 0, p.z / p.w);
-}
-
-fn lightSpaceToProjectedVec4(point: vec2<f32>) -> vec4<f32> {
-    let half_angle = spotlight.field_of_view / 2;
-    let right_extent = spotlight.focal_length * tan(half_angle);
-    let scale_factor = 1 / right_extent;
-    let scaled_focal_length = spotlight.focal_length * scale_factor;
-    let scaled_point = point * scale_factor;
-    let projected = scaled_point.x * scaled_focal_length;
-    // Set W to let the GPU perform the perspective projection, as it will
-    // also perform clipping if needed, deal with the situation where W is zero, etc.
-    return vec4(projected, 0, point.y / MAX_Z_FROM_LIGHT * scaled_point.y, scaled_point.y);
 }
