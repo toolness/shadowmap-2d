@@ -126,7 +126,7 @@ function updateSpotlightDataBuffer() {
         spotlight.fieldOfView,
     ]);
     device.queue.writeBuffer(spotlightDataBuffer, 0, spotlightData);
-    device.queue.writeBuffer(spotlightDataBuffer, 32, viewProjectionData.buffer, viewProjectionData.byteOffset, viewProjectionData.byteLength);
+    device.queue.writeBuffer(spotlightDataBuffer, 32, viewProjectionData);
 }
 
 const shaders = await fetchShader(device, "shaders.wgsl");
