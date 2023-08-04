@@ -111,12 +111,13 @@ function updateSpotlightFromInputs() {
 function updateSpotlightDataBuffer() {
     const SPOTLIGHT_Z_FAR = 10;
     const r = mat4.rotationY(-degreesToRadians(rotationInput.valueAsNumber));
-    const t = mat4.translate(r, vec3.create(-spotlight.pos[0], 0, -spotlight.pos[1]));
+    // Note that the camera points along the *negative* z-axis.
+    const t = mat4.translate(r, vec3.create(-spotlight.pos[0], 0, spotlight.pos[1]));
     const p = mat4.perspective(spotlight.fieldOfView, 1, spotlight.focalLength, SPOTLIGHT_Z_FAR);
     const viewProjection = mat4.multiply(p, t);
     const viewProjectionData = viewProjection as Float32Array;
     const transformedPoint = vec4.transformMat4(vec4.create(-1, 0, 0, 1), viewProjection);
-    console.log({transformedPoint, xOverW: transformedPoint[0] / transformedPoint[3]});
+    console.log({transformedPoint, xOverW: transformedPoint[0] / transformedPoint[3], zOverW: transformedPoint[2] / transformedPoint[3]});
 
     const spotlightData = new Float32Array([
         ...spotlight.pos,
