@@ -4,6 +4,7 @@ const shadowMapCanvas = document.getElementById("shadow-map-canvas") as HTMLCanv
 const renderingCanvas = document.getElementById("rendering-canvas") as HTMLCanvasElement;
 const rotationInput = document.getElementById("rotation") as HTMLInputElement;
 const focalLengthInput = document.getElementById("focal-length") as HTMLInputElement;
+const maxDistanceInput = document.getElementById("max-distance") as HTMLInputElement;
 const fovInput = document.getElementById("fov") as HTMLInputElement;
 const statsPre = document.getElementById("stats") as HTMLPreElement;
 const positionPre = document.getElementById("position") as HTMLPreElement;
@@ -89,11 +90,11 @@ type Spotlight2D = {
 
 const spotlight: Spotlight2D = {
     pos: SPOTLIGHT_INITIAL_POS,
-    maxDistance: 2,
     // These values are all retrieved from the DOM.
     focalLength: 0,
     rotation: 0,
     fieldOfView: 0,
+    maxDistance: 0,
 }
 
 const VEC2_F32_SIZE = 8;
@@ -109,6 +110,7 @@ const spotlightDataBuffer = device.createBuffer({
 function updateSpotlightFromInputs() {
     spotlight.rotation = degreesToRadians(rotationInput.valueAsNumber);
     spotlight.focalLength = focalLengthInput.valueAsNumber;
+    spotlight.maxDistance = maxDistanceInput.valueAsNumber;
     spotlight.fieldOfView = degreesToRadians(fovInput.valueAsNumber);
 }
 
@@ -410,6 +412,7 @@ function updateAndDraw() {
     draw();
     getLabelFor(rotationInput).textContent = `Rotation (${rotationInput.value}°)`;
     getLabelFor(focalLengthInput).textContent = `Focal length (${focalLengthInput.value})`;
+    getLabelFor(maxDistanceInput).textContent = `Max distance (${maxDistanceInput.value})`;
     getLabelFor(fovInput).textContent = `Field of view (${fovInput.value}°)`;
     positionPre.textContent = `Position: (${spotlight.pos[0].toFixed(2)}, ${spotlight.pos[1].toFixed(2)})`;
 }
@@ -418,6 +421,7 @@ updateAndDraw();
 
 rotationInput.oninput = updateAndDraw;
 focalLengthInput.oninput = updateAndDraw;
+maxDistanceInput.oninput = updateAndDraw;
 fovInput.oninput = updateAndDraw;
 
 /**
