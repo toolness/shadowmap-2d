@@ -93,7 +93,7 @@ interface State {
     spotlight: Spotlight2D,
 }
 
-const state = {
+const state: State = {
     spotlight: {
         pos: SPOTLIGHT_INITIAL_POS,
         // These values are all retrieved from the DOM.
