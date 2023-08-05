@@ -15,8 +15,18 @@
     label {
         display: block;
     }
+    #fatal-error {
+        background: crimson;
+        color: white;
+        white-space: pre-wrap;
+        padding: 1em;
+    }
+    .hidden {
+        display: none;
+    }
 </style>
 <title>Shadowmap 2D (WebGPU)</title>
+<div id="fatal-error" class="hidden"></div>
 <h1>Rendering</h1>
 <canvas id="rendering-canvas" width="512" height="512"></canvas>
 <div>

@@ -1,14 +1,15 @@
 import { Mat4, Vec4, mat4, vec3, vec4 } from "./vendor/wgpu-matrix/wgpu-matrix.js";
 
-const shadowMapCanvas = document.getElementById("shadow-map-canvas") as HTMLCanvasElement;
-const renderingCanvas = document.getElementById("rendering-canvas") as HTMLCanvasElement;
-const rotationInput = document.getElementById("rotation") as HTMLInputElement;
-const focalLengthInput = document.getElementById("focal-length") as HTMLInputElement;
-const maxDistanceInput = document.getElementById("max-distance") as HTMLInputElement;
-const fovInput = document.getElementById("fov") as HTMLInputElement;
-const renderingStatsPre = document.getElementById("rendering-stats") as HTMLPreElement;
-const shadowMapStatsPre = document.getElementById("shadow-map-stats") as HTMLPreElement;
-const statsPre = document.getElementById("stats") as HTMLPreElement;
+const shadowMapCanvas = getElement("canvas", "shadow-map-canvas");
+const renderingCanvas = getElement("canvas", "rendering-canvas");
+const rotationInput = getElement("input", "rotation");
+const focalLengthInput = getElement("input", "focal-length");
+const maxDistanceInput = getElement("input", "max-distance");
+const fovInput = getElement("input", "fov");
+const renderingStatsPre = getElement("pre", "rendering-stats");
+const shadowMapStatsPre = getElement("pre", "shadow-map-stats");
+const statsPre = getElement("pre", "stats");
+const fatalErrorDiv = getElement("div", "fatal-error");
 
 const RENDERING_WIDTH = renderingCanvas.width;
 const RENDERING_HEIGHT = renderingCanvas.height;
@@ -27,6 +28,20 @@ const WALL_VERTICES = new Float32Array([
     0.25, -0.25,
     0.25, -0.5,
 ]);
+
+window.onerror = (e) => {
+    fatalErrorDiv.textContent += `${e.toString()}\n`;
+    fatalErrorDiv.classList.remove("hidden");
+}
+
+function getElement<K extends keyof HTMLElementTagNameMap>(tagName: K, id: string): HTMLElementTagNameMap[K] {
+    const selector = `${tagName}#${id}`;
+    const el = document.querySelector(selector);
+    if (!el) {
+        throw new Error(`Unable to find <${tagName} id="${id}">!`);
+    }
+    return el as any;
+}
 
 if (!navigator.gpu) {
     throw new Error("WebGPU not supported on this browser.");
