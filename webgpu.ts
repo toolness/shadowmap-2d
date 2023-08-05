@@ -8,6 +8,8 @@ const fovInput = document.getElementById("fov") as HTMLInputElement;
 const statsPre = document.getElementById("stats") as HTMLPreElement;
 const positionPre = document.getElementById("position") as HTMLPreElement;
 
+const RENDERING_WIDTH = renderingCanvas.width;
+const RENDERING_HEIGHT = renderingCanvas.height;
 const SHADOW_MAP_WIDTH = shadowMapCanvas.width;
 const SHADOW_MAP_HEIGHT = shadowMapCanvas.height;
 
@@ -383,7 +385,11 @@ function draw() {
 
     device.queue.onSubmittedWorkDone().then(() => {
         const renderTime = Math.ceil(performance.now() - renderStart);
-        statsPre.textContent = `Frame render time: ${renderTime} ms`;
+        statsPre.textContent = [
+            `Shadow map size: ${SHADOW_MAP_WIDTH}x${SHADOW_MAP_HEIGHT} px`,
+            `Rendering size: ${RENDERING_WIDTH}x${RENDERING_HEIGHT} px`,
+            `Frame render time: ${renderTime} ms`,
+        ].join('\n');
     })
 
     if (shadowMapStagingBuffer) {
