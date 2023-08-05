@@ -91,6 +91,7 @@ type Spotlight2D = {
 
 interface State {
     spotlight: Spotlight2D,
+    cursor: Point2D|undefined
 }
 
 const state: State = {
@@ -101,7 +102,8 @@ const state: State = {
         rotation: 0,
         fieldOfView: 0,
         maxDistance: 0,
-    }
+    },
+    cursor: undefined
 }
 
 const VEC2_F32_SIZE = 8;
@@ -426,6 +428,7 @@ function updateAndDraw() {
     getLabelFor(fovInput).textContent = `Spotlight field of view (${fovInput.value}°)`;
     renderingStatsPre.textContent = [
         `Spotlight position: ${pointToStr(state.spotlight.pos)}`,
+        state.cursor ? `Cursor position: ${pointToStr(state.cursor)}` : '',
         `Rendering size: ${RENDERING_WIDTH}x${RENDERING_HEIGHT} px`,
     ].join('\n');
 }
@@ -483,6 +486,26 @@ window.addEventListener('keydown', e => {
     }
 });
 
+function canvasSpaceToClip(point: Point2D): Point2D {
+    const x = (point[0] / RENDERING_WIDTH) * 2 - 1;
+    const y = ((RENDERING_HEIGHT - point[1]) / RENDERING_HEIGHT) * 2 - 1;
+    return [x, y]
+}
+
+function clipPointFromMouseEvent(event: MouseEvent): Point2D {
+    return canvasSpaceToClip([event.offsetX, event.offsetY]);
+}
+
 shadowMapStatsPre.textContent = `Shadow map size: ${SHADOW_MAP_WIDTH}x${SHADOW_MAP_HEIGHT} px`;
+
+renderingCanvas.addEventListener("mousemove", event => {
+    state.cursor = clipPointFromMouseEvent(event);
+    updateAndDraw();
+});
+
+renderingCanvas.addEventListener("mouseout", event => {
+    state.cursor = undefined;
+    updateAndDraw();
+})
 
 export {}
