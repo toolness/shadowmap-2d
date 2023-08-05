@@ -26,3 +26,9 @@ export function pointToVec4XZ(point: Point2D): Vec4 {
 export function vec4XZToPoint(v: Vec4): Point2D {
     return [v[0] / v[3], v[2] / v[3]];
 }
+
+export function canvasSpaceToClip(canvas: HTMLCanvasElement, point: Point2D): Point2D {
+    const x = (point[0] / canvas.width) * 2 - 1;
+    const y = ((canvas.height - point[1]) / canvas.height) * 2 - 1;
+    return [x, y]
+}

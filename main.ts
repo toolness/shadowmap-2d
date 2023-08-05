@@ -1,5 +1,5 @@
 import { getElement, getLabelFor } from "./dom.js";
-import { degreesToRadians, mat4AsFloatArray, pointToVec4XZ, pointToStr, vec4XZToPoint, Point2D } from "./math.js";
+import { degreesToRadians, mat4AsFloatArray, pointToVec4XZ, pointToStr, vec4XZToPoint, Point2D, canvasSpaceToClip } from "./math.js";
 import { fetchShader } from "./network.js";
 import { Mat4, mat4, vec3, vec4 } from "./vendor/wgpu-matrix/wgpu-matrix.js";
 
@@ -481,16 +481,10 @@ window.addEventListener('keydown', e => {
     }
 });
 
-function canvasSpaceToClip(point: Point2D): Point2D {
-    const x = (point[0] / RENDERING_WIDTH) * 2 - 1;
-    const y = ((RENDERING_HEIGHT - point[1]) / RENDERING_HEIGHT) * 2 - 1;
-    return [x, y]
-}
-
 shadowMapStatsPre.textContent = `Shadow map size: ${SHADOW_MAP_WIDTH}x${SHADOW_MAP_HEIGHT} px`;
 
 renderingCanvas.addEventListener("mousemove", event => {
-    state.cursor = canvasSpaceToClip([event.offsetX, event.offsetY]);
+    state.cursor = canvasSpaceToClip(renderingCanvas, [event.offsetX, event.offsetY]);
     updateAndDraw();
 });
 
