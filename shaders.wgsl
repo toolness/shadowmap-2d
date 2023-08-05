@@ -8,9 +8,6 @@ const MAX_Z_FROM_LIGHT: f32 = 2;
 
 struct Spotlight {
     pos: vec2<f32>,
-    rotation: f32,
-    focal_length: f32,
-    field_of_view: f32,
     light_view_proj_matrix: mat4x4<f32>,
 }
 

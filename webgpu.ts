@@ -98,7 +98,7 @@ const MAT4X4_F32_SIZE = 64;
 
 const spotlightDataBuffer = device.createBuffer({
     label: "Spotlight data buffer",
-    size: VEC2_F32_SIZE + F32_SIZE + F32_SIZE + F32_SIZE + 12 + MAT4X4_F32_SIZE,
+    size: VEC2_F32_SIZE + 8 + MAT4X4_F32_SIZE,
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
 });
 
@@ -120,12 +120,9 @@ function updateSpotlightDataBuffer() {
 
     const spotlightData = new Float32Array([
         ...spotlight.pos,
-        spotlight.rotation,
-        spotlight.focalLength,
-        spotlight.fieldOfView,
     ]);
     device.queue.writeBuffer(spotlightDataBuffer, 0, spotlightData);
-    device.queue.writeBuffer(spotlightDataBuffer, 32, viewProjectionData);
+    device.queue.writeBuffer(spotlightDataBuffer, 16, viewProjectionData);
 }
 
 const shaders = await fetchShader(device, "shaders.wgsl");
