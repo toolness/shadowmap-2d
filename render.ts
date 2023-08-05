@@ -10,7 +10,13 @@ export type Spotlight2D = {
     maxDistance: number,
 }
 
+export type Line2D = {
+    start: Point2D,
+    end: Point2D,
+};
+
 interface RenderState {
+    walls: Line2D[],
     spotlight: Spotlight2D,
     cursor: Point2D|undefined,
 }
@@ -26,15 +32,6 @@ interface RenderComputedState {
 const VEC2_F32_SIZE = 8;
 const F32_SIZE = 4;
 const MAT4X4_F32_SIZE = 64;
-
-const WALL_VERTICES = new Float32Array([
-    0.25, 0.25,
-    0.75, 0.25,
-    -0.25, -0.25,
-    -0.75, -0.25,
-    0.25, -0.25,
-    0.25, -0.5,
-]);
 
 /**
  * The rendering is just a square that covers the entire clip space.
@@ -201,15 +198,25 @@ export async function initRenderPipeline(args: {
             }],
         }
     });
-    
-    const wallVertexBuffer = device.createBuffer({
-        label: "Wall vertex buffer",
-        size: WALL_VERTICES.byteLength,
-        usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
-    });
-    
-    device.queue.writeBuffer(wallVertexBuffer, 0, WALL_VERTICES);
-    
+
+    const initWallVertexBuffer = () => {
+        const { walls } = state;
+        const vertices: number[] = [];
+        for (const {start, end} of walls) {
+            vertices.push(...start, ...end);
+        }
+        const array = new Float32Array(vertices);
+        const buffer = device.createBuffer({
+            label: "Wall vertex buffer",
+            size: array.byteLength,
+            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+        });
+        device.queue.writeBuffer(buffer, 0, array);
+        return buffer;
+    };
+
+    let wallVertexBuffer = initWallVertexBuffer();
+
     const wallVertexBufferLayout: GPUVertexBufferLayout = {
         arrayStride: 8,
         attributes: [{
@@ -313,8 +320,6 @@ export async function initRenderPipeline(args: {
     function draw() {
         const renderStart = performance.now()
 
-        updateSpotlightDataBuffer();
-
         const encoder = device.createCommandEncoder();
     
         const shadowMapPass = encoder.beginRenderPass({
@@ -336,7 +341,7 @@ export async function initRenderPipeline(args: {
         shadowMapPass.setPipeline(shadowMapPipeline);
         shadowMapPass.setVertexBuffer(0, wallVertexBuffer);
         shadowMapPass.setBindGroup(0, shadowMapBindGroup);
-        shadowMapPass.draw(WALL_VERTICES.length / 2);
+        shadowMapPass.draw(state.walls.length * 2);
         shadowMapPass.end();
     
         if (shadowMapStagingBuffer) {
@@ -389,14 +394,22 @@ export async function initRenderPipeline(args: {
         }
     }
 
+    updateSpotlightDataBuffer();
     draw();
 
     return {
         getComputedState: () => computedState,
         getState: () => state,
         setState: (newState: RenderState) => {
+            const prevState = state;
             state = newState;
             computedState = computeState(state);
+            if (state.spotlight !== prevState.spotlight) {
+                updateSpotlightDataBuffer();
+            }
+            if (state.walls !== prevState.walls) {
+                wallVertexBuffer = initWallVertexBuffer();
+            }
             draw();
         },
     }

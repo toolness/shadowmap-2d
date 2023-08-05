@@ -1,6 +1,6 @@
 import { getElement, getLabelFor } from "./dom.js";
 import { degreesToRadians, pointToVec4XZ, pointToStr, vec4XZToPoint, Point2D, canvasSpaceToClip } from "./math.js";
-import { Spotlight2D, initRenderPipeline } from "./render.js";
+import { Line2D, Spotlight2D, initRenderPipeline } from "./render.js";
 import { vec4 } from "./vendor/wgpu-matrix/wgpu-matrix.js";
 
 const shadowMapCanvas = getElement("canvas", "shadow-map-canvas");
@@ -23,6 +23,12 @@ const LOG_SHADOW_MAP_TO_CONSOLE = false;
 
 const SPOTLIGHT_INITIAL_POS: Point2D = [0, -1];
 
+const WALLS: Line2D[] = [
+    {start: [0.25, 0.25], end: [0.75, 0.25]},
+    {start: [-0.25, -0.25], end: [-0.75, -0.25]},
+    {start: [0.25, -0.25], end: [0.25, -0.5]},
+];
+
 window.onerror = (e) => {
     fatalErrorDiv.textContent += `${e.toString()}\n`;
     fatalErrorDiv.classList.remove("hidden");
@@ -33,6 +39,7 @@ const renderPipeline = await initRenderPipeline({
     shadowMapCanvas,
     logShadowMapToConsole: LOG_SHADOW_MAP_TO_CONSOLE,
     initialState: {
+        walls: WALLS,
         spotlight: {
             pos: SPOTLIGHT_INITIAL_POS,
             ...getSpotlightStateFromInputs()
