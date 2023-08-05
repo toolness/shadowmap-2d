@@ -1,4 +1,4 @@
-import { Mat4, mat4, vec3, vec4 } from "./vendor/wgpu-matrix/wgpu-matrix.js";
+import { Mat4, Vec4, mat4, vec3, vec4 } from "./vendor/wgpu-matrix/wgpu-matrix.js";
 
 const shadowMapCanvas = document.getElementById("shadow-map-canvas") as HTMLCanvasElement;
 const renderingCanvas = document.getElementById("rendering-canvas") as HTMLCanvasElement;
@@ -87,6 +87,8 @@ type Spotlight2D = {
     focalLength: number,
     fieldOfView: number,
     maxDistance: number,
+    viewMatrix: Mat4,
+    projectionMatrix: Mat4,
     viewProjectionMatrix: Mat4
 }
 
@@ -106,6 +108,8 @@ const state: State = {
         maxDistance: 0,
 
         // Will be computed later.
+        viewMatrix: mat4.identity(),
+        projectionMatrix: mat4.identity(),
         viewProjectionMatrix: mat4.identity()
     },
     cursor: undefined
@@ -128,10 +132,10 @@ function updateSpotlightFromInputs() {
     spotlight.maxDistance = maxDistanceInput.valueAsNumber;
     spotlight.fieldOfView = degreesToRadians(fovInput.valueAsNumber);
 
-    const r = mat4.rotationY(Math.PI - spotlight.rotation);
-    const t = mat4.translate(r, vec3.create(-spotlight.pos[0], 0, -spotlight.pos[1]));
-    const p = mat4.perspective(spotlight.fieldOfView, 1, spotlight.focalLength, spotlight.maxDistance);
-    spotlight.viewProjectionMatrix = mat4.multiply(p, t);
+    const rotation = mat4.rotationY(Math.PI - spotlight.rotation);
+    spotlight.viewMatrix = mat4.translate(rotation, vec3.create(-spotlight.pos[0], 0, -spotlight.pos[1]));
+    spotlight.projectionMatrix = mat4.perspective(spotlight.fieldOfView, 1, spotlight.focalLength, spotlight.maxDistance);
+    spotlight.viewProjectionMatrix = mat4.multiply(spotlight.projectionMatrix, spotlight.viewMatrix);
 }
 
 function mat4FloatArray(m: Mat4): Float32Array {
@@ -430,6 +434,15 @@ function pointToStr(point: Point2D): string {
     return `(${x.toFixed(2)}, ${y.toFixed(2)})`
 }
 
+function pointToVec4(point: Point2D): Vec4 {
+    const [x, z] = point;
+    return vec4.create(x, 0, z, 1);
+}
+
+function vec4ToPoint(v: Vec4): Point2D {
+    return [v[0] / v[3], v[2] / v[3]];
+}
+
 function updateAndDraw() {
     updateSpotlightFromInputs();
     updateSpotlightDataBuffer();
@@ -438,9 +451,20 @@ function updateAndDraw() {
     getLabelFor(focalLengthInput).textContent = `Spotight focal length (${focalLengthInput.value})`;
     getLabelFor(maxDistanceInput).textContent = `Spotlight max distance (${maxDistanceInput.value})`;
     getLabelFor(fovInput).textContent = `Spotlight field of view (${fovInput.value}°)`;
+    const cursorStats: string[] = []
+    if (state.cursor) {
+        const worldPos = pointToVec4(state.cursor);
+        const lightPos = vec4.transformMat4(worldPos, state.spotlight.viewMatrix);
+        const projectedLightPos = vec4.transformMat4(worldPos, state.spotlight.viewProjectionMatrix);
+        cursorStats.push(
+            `Cursor position: ${pointToStr(state.cursor)}`,
+            `  in light space: ${pointToStr(vec4ToPoint(lightPos))}`,
+            `  in projected light space: ${pointToStr(vec4ToPoint(projectedLightPos))}`
+        );
+    }
     renderingStatsPre.textContent = [
         `Spotlight position: ${pointToStr(state.spotlight.pos)}`,
-        state.cursor ? `Cursor position: ${pointToStr(state.cursor)}` : '',
+        ...cursorStats,
         `Rendering size: ${RENDERING_WIDTH}x${RENDERING_HEIGHT} px`,
     ].join('\n');
 }
