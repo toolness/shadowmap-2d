@@ -1,5 +1,6 @@
 import { getElement, getLabelFor } from "./dom.js";
-import { Mat4, Vec4, mat4, vec3, vec4 } from "./vendor/wgpu-matrix/wgpu-matrix.js";
+import { degreesToRadians, mat4AsFloatArray, pointToVec4XZ, pointToStr, vec4XZToPoint, Point2D } from "./math.js";
+import { Mat4, mat4, vec3, vec4 } from "./vendor/wgpu-matrix/wgpu-matrix.js";
 
 const shadowMapCanvas = getElement("canvas", "shadow-map-canvas");
 const renderingCanvas = getElement("canvas", "rendering-canvas");
@@ -71,12 +72,6 @@ async function fetchShader(device: GPUDevice, filename: string): Promise<GPUShad
     });
 }
 
-function degreesToRadians(degrees: number): number {
-    return degrees * Math.PI / 180;
-}
-
-type Point2D = [number, number];
-
 type Spotlight2D = {
     pos: Point2D,
     rotation: number,
@@ -134,16 +129,9 @@ function updateSpotlightFromInputs() {
     spotlight.viewProjectionMatrix = mat4.multiply(spotlight.projectionMatrix, spotlight.viewMatrix);
 }
 
-function mat4FloatArray(m: Mat4): Float32Array {
-    if (!(m instanceof Float32Array)) {
-        throw new Error(`Assertion failure, not a Float32Array!`);
-    }
-    return m;
-}
-
 function updateSpotlightDataBuffer() {
     const { spotlight } = state;
-    const viewProjectionData = mat4FloatArray(spotlight.viewProjectionMatrix);
+    const viewProjectionData = mat4AsFloatArray(spotlight.viewProjectionMatrix);
     const spotlightData = new Float32Array([
         ...spotlight.pos,
         spotlight.focalLength,
@@ -425,20 +413,6 @@ function draw() {
     }
 }
 
-function pointToStr(point: Point2D): string {
-    const [x, y] = point;
-    return `(${x.toFixed(2)}, ${y.toFixed(2)})`
-}
-
-function pointToVec4(point: Point2D): Vec4 {
-    const [x, z] = point;
-    return vec4.create(x, 0, z, 1);
-}
-
-function vec4ToPoint(v: Vec4): Point2D {
-    return [v[0] / v[3], v[2] / v[3]];
-}
-
 function updateAndDraw() {
     updateSpotlightFromInputs();
     updateSpotlightDataBuffer();
@@ -449,13 +423,13 @@ function updateAndDraw() {
     getLabelFor(fovInput).textContent = `Spotlight field of view (${fovInput.value}°)`;
     let cursorStats = ['', '', '']
     if (state.cursor) {
-        const worldPos = pointToVec4(state.cursor);
+        const worldPos = pointToVec4XZ(state.cursor);
         const lightPos = vec4.transformMat4(worldPos, state.spotlight.viewMatrix);
         const projectedLightPos = vec4.transformMat4(worldPos, state.spotlight.viewProjectionMatrix);
         cursorStats = [
             `Cursor position: ${pointToStr(state.cursor)}`,
-            `  in light space: ${pointToStr(vec4ToPoint(lightPos))}`,
-            `  in projected light space: ${pointToStr(vec4ToPoint(projectedLightPos))}`
+            `  in light space: ${pointToStr(vec4XZToPoint(lightPos))}`,
+            `  in projected light space: ${pointToStr(vec4XZToPoint(projectedLightPos))}`
         ];
     }
     renderingStatsPre.textContent = [
@@ -524,14 +498,10 @@ function canvasSpaceToClip(point: Point2D): Point2D {
     return [x, y]
 }
 
-function clipPointFromMouseEvent(event: MouseEvent): Point2D {
-    return canvasSpaceToClip([event.offsetX, event.offsetY]);
-}
-
 shadowMapStatsPre.textContent = `Shadow map size: ${SHADOW_MAP_WIDTH}x${SHADOW_MAP_HEIGHT} px`;
 
 renderingCanvas.addEventListener("mousemove", event => {
-    state.cursor = clipPointFromMouseEvent(event);
+    state.cursor = canvasSpaceToClip([event.offsetX, event.offsetY]);
     updateAndDraw();
 });
 
