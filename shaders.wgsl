@@ -53,7 +53,6 @@ fn vertexRendering(@location(0) pos: vec2f) -> RenderingVertexOutput {
 
 @fragment
 fn fragmentRendering(input: RenderingVertexOutput) -> @location(0) vec4f {
-    let light_point = clipSpaceToLight(input.clip_space_pos);
     let world_pos = vec4(input.clip_space_pos.x, 0, input.clip_space_pos.y, 1);
     let projected_light_point = spotlight.light_view_proj_matrix * world_pos;
     let u = (projected_light_point.x / projected_light_point.w + 1) / 2;
@@ -64,26 +63,9 @@ fn fragmentRendering(input: RenderingVertexOutput) -> @location(0) vec4f {
         is_lit = shadow_depth > depth;
     }
     if is_lit {
-        let distance_from_light = 1 - clamp(distance(vec2(), light_point) / MAX_Z_FROM_LIGHT, 0, 1);
+        let distance_from_light = 1 - clamp(distance(input.clip_space_pos, spotlight.pos) / MAX_Z_FROM_LIGHT, 0, 1);
         return vec4f(distance_from_light, distance_from_light, distance_from_light, 1);
     } else {
         return vec4f(0, 0, 0, 1);
     }
-}
-
-fn clipSpaceToLight(point: vec2<f32>) -> vec2<f32> {
-    let rotated = rotatePoint(point, PI / 2 - spotlight.rotation, spotlight.pos);
-    let translated = rotated - spotlight.pos;
-    return translated;
-}
-
-fn rotatePoint(point: vec2<f32>, angle: f32, origin: vec2<f32>) -> vec2<f32> {
-    let relative_point = point - origin;
-    let cos_angle = cos(angle);
-    let sin_angle = sin(angle);
-    let rotated_point = vec2(
-        relative_point.x * cos_angle - relative_point.y * sin_angle,
-        relative_point.y * cos_angle + relative_point.x * sin_angle
-    );
-    return rotated_point + origin;
 }
