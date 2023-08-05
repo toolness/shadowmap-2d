@@ -89,13 +89,19 @@ type Spotlight2D = {
     maxDistance: number,
 }
 
-const spotlight: Spotlight2D = {
-    pos: SPOTLIGHT_INITIAL_POS,
-    // These values are all retrieved from the DOM.
-    focalLength: 0,
-    rotation: 0,
-    fieldOfView: 0,
-    maxDistance: 0,
+interface State {
+    spotlight: Spotlight2D,
+}
+
+const state = {
+    spotlight: {
+        pos: SPOTLIGHT_INITIAL_POS,
+        // These values are all retrieved from the DOM.
+        focalLength: 0,
+        rotation: 0,
+        fieldOfView: 0,
+        maxDistance: 0,
+    }
 }
 
 const VEC2_F32_SIZE = 8;
@@ -109,6 +115,7 @@ const spotlightDataBuffer = device.createBuffer({
 });
 
 function updateSpotlightFromInputs() {
+    const { spotlight } = state;
     spotlight.rotation = degreesToRadians(rotationInput.valueAsNumber);
     spotlight.focalLength = focalLengthInput.valueAsNumber;
     spotlight.maxDistance = maxDistanceInput.valueAsNumber;
@@ -116,6 +123,7 @@ function updateSpotlightFromInputs() {
 }
 
 function updateSpotlightDataBuffer() {
+    const { spotlight } = state;
     const r = mat4.rotationY(Math.PI - spotlight.rotation);
     const t = mat4.translate(r, vec3.create(-spotlight.pos[0], 0, -spotlight.pos[1]));
     const p = mat4.perspective(spotlight.fieldOfView, 1, spotlight.focalLength, spotlight.maxDistance);
@@ -403,6 +411,11 @@ function draw() {
     }
 }
 
+function pointToStr(point: Point2D): string {
+    const [x, y] = point;
+    return `(${x.toFixed(2)}, ${y.toFixed(2)})`
+}
+
 function updateAndDraw() {
     updateSpotlightFromInputs();
     updateSpotlightDataBuffer();
@@ -412,7 +425,7 @@ function updateAndDraw() {
     getLabelFor(maxDistanceInput).textContent = `Spotlight max distance (${maxDistanceInput.value})`;
     getLabelFor(fovInput).textContent = `Spotlight field of view (${fovInput.value}°)`;
     renderingStatsPre.textContent = [
-        `Spotlight position: (${spotlight.pos[0].toFixed(2)}, ${spotlight.pos[1].toFixed(2)})`,
+        `Spotlight position: ${pointToStr(state.spotlight.pos)}`,
         `Rendering size: ${RENDERING_WIDTH}x${RENDERING_HEIGHT} px`,
     ].join('\n');
 }
@@ -462,8 +475,8 @@ window.addEventListener('keydown', e => {
         rotDelta += 1;
     }
     if (xDelta || yDelta) {
-        spotlight.pos[0] += xDelta * MOVE_AMOUNT;
-        spotlight.pos[1] += yDelta * MOVE_AMOUNT;
+        state.spotlight.pos[0] += xDelta * MOVE_AMOUNT;
+        state.spotlight.pos[1] += yDelta * MOVE_AMOUNT;
         updateAndDraw();
     } else if (rotDelta) {
         incrementOrDecrementRotation(rotDelta);
