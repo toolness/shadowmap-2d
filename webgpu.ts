@@ -13,7 +13,7 @@ const SHADOW_MAP_HEIGHT = shadowMapCanvas.height;
 
 const LOG_SHADOW_MAP_TO_CONSOLE = false
 
-const SPOTLIGHT_INITIAL_POS: Point2D = [0, -1];
+const SPOTLIGHT_INITIAL_POS: Point2D = [0, 1];
 
 const WALL_VERTICES = new Float32Array([
     0.25, 0.25,
@@ -111,8 +111,7 @@ function updateSpotlightFromInputs() {
 function updateSpotlightDataBuffer() {
     const SPOTLIGHT_Z_FAR = 10;
     const r = mat4.rotationY(-degreesToRadians(rotationInput.valueAsNumber));
-    // Note that the camera points along the *negative* z-axis.
-    const t = mat4.translate(r, vec3.create(-spotlight.pos[0], 0, spotlight.pos[1]));
+    const t = mat4.translate(r, vec3.create(-spotlight.pos[0], 0, -spotlight.pos[1]));
     const p = mat4.perspective(spotlight.fieldOfView, 1, spotlight.focalLength, SPOTLIGHT_Z_FAR);
     const viewProjection = mat4.multiply(p, t);
     const viewProjectionData = viewProjection as Float32Array;
