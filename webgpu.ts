@@ -451,16 +451,16 @@ function updateAndDraw() {
     getLabelFor(focalLengthInput).textContent = `Spotight focal length (${focalLengthInput.value})`;
     getLabelFor(maxDistanceInput).textContent = `Spotlight max distance (${maxDistanceInput.value})`;
     getLabelFor(fovInput).textContent = `Spotlight field of view (${fovInput.value}°)`;
-    const cursorStats: string[] = []
+    let cursorStats = ['', '', '']
     if (state.cursor) {
         const worldPos = pointToVec4(state.cursor);
         const lightPos = vec4.transformMat4(worldPos, state.spotlight.viewMatrix);
         const projectedLightPos = vec4.transformMat4(worldPos, state.spotlight.viewProjectionMatrix);
-        cursorStats.push(
+        cursorStats = [
             `Cursor position: ${pointToStr(state.cursor)}`,
             `  in light space: ${pointToStr(vec4ToPoint(lightPos))}`,
             `  in projected light space: ${pointToStr(vec4ToPoint(projectedLightPos))}`
-        );
+        ];
     }
     renderingStatsPre.textContent = [
         `Spotlight position: ${pointToStr(state.spotlight.pos)}`,
