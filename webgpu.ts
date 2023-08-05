@@ -1,3 +1,4 @@
+import { getElement, getLabelFor } from "./dom.js";
 import { Mat4, Vec4, mat4, vec3, vec4 } from "./vendor/wgpu-matrix/wgpu-matrix.js";
 
 const shadowMapCanvas = getElement("canvas", "shadow-map-canvas");
@@ -34,15 +35,6 @@ window.onerror = (e) => {
     fatalErrorDiv.classList.remove("hidden");
 }
 
-function getElement<K extends keyof HTMLElementTagNameMap>(tagName: K, id: string): HTMLElementTagNameMap[K] {
-    const selector = `${tagName}#${id}`;
-    const el = document.querySelector(selector);
-    if (!el) {
-        throw new Error(`Unable to find <${tagName} id="${id}">!`);
-    }
-    return el as any;
-}
-
 if (!navigator.gpu) {
     throw new Error("WebGPU not supported on this browser.");
 }
@@ -53,17 +45,6 @@ const adapter = await navigator.gpu.requestAdapter({
 
 if (!adapter) {
     throw new Error("No appropriate GPUAdapter found.");
-}
-
-function getLabelFor(element: HTMLElement): HTMLLabelElement {
-    if (!element.id) {
-        throw new Error("Element does not have an ID");
-    }
-    const label = document.querySelector(`label[for="${element.id}"]`) as HTMLLabelElement|null;
-    if (!label) {
-        throw new Error(`Label not found for #${element.id}`);
-    }
-    return label;
 }
 
 const device = await adapter.requestDevice();
