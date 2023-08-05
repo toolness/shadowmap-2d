@@ -400,9 +400,10 @@ export async function initRenderPipeline(args: {
         let state = initialState;
         let computedState = initialComputedState;
         return {
-            setState: (setter: RenderStateSetter) => {
+            setState: (newState: RenderStateSetter|Partial<RenderState>) => {
                 const prevState = state;
-                state = setter(state, computedState);
+                const updates: Partial<RenderState> = typeof newState === "function" ? newState(state, computedState) : newState;
+                state = {...state, ...updates};
                 computedState = computeState(state);
                 if (state.spotlight !== prevState.spotlight) {
                     updateSpotlightDataBuffer(state, computedState);
@@ -417,4 +418,4 @@ export async function initRenderPipeline(args: {
     }
 }
 
-type RenderStateSetter = (state: RenderState, computedState: RenderComputedState) => RenderState;
+type RenderStateSetter = (state: RenderState, computedState: RenderComputedState) => Partial<RenderState>;

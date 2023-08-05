@@ -84,7 +84,6 @@ function getSpotlightStateFromInputs(): Omit<Spotlight2D, "pos"> {
 
 function handleInputChange() {
     renderPipeline.setState(state => ({
-        ...state,
         spotlight: {
             ...state.spotlight,
             ...getSpotlightStateFromInputs()
@@ -136,7 +135,6 @@ window.addEventListener('keydown', e => {
     }
     if (xDelta || yDelta) {
         renderPipeline.setState(state => ({
-            ...state,
             spotlight: {
                 ...state.spotlight,
                 pos: [
@@ -153,17 +151,15 @@ window.addEventListener('keydown', e => {
 shadowMapStatsPre.textContent = `Shadow map size: ${SHADOW_MAP_WIDTH}x${SHADOW_MAP_HEIGHT} px`;
 
 renderingCanvas.addEventListener("mousemove", event => {
-    renderPipeline.setState(state => ({
-        ...state,
+    renderPipeline.setState({
         cursor: canvasSpaceToClip(renderingCanvas, [event.offsetX, event.offsetY]),
-    }));
+    });
 });
 
 renderingCanvas.addEventListener("mouseout", event => {
-   renderPipeline.setState(state => ({
-        ...state,
+    renderPipeline.setState({
         cursor: undefined
-    }));
+    });
 });
 
 export {}
