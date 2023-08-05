@@ -56,8 +56,8 @@ fn fragmentRendering(input: RenderingVertexOutput) -> @location(0) vec4f {
     let light_point = clipSpaceToLight(input.clip_space_pos);
     let world_pos = vec4(input.clip_space_pos.x, 0, input.clip_space_pos.y, 1);
     let projected_light_point = spotlight.light_view_proj_matrix * world_pos;
-    let u = (projected_light_point.x + 1) / 2;
-    let depth = projected_light_point.z;
+    let u = (projected_light_point.x / projected_light_point.w + 1) / 2;
+    let depth = projected_light_point.z / projected_light_point.w;
     var is_lit: bool = false;
     let shadow_depth = textureSample(shadowMap, shadowMapSampler, vec2(u, 0));
     if (u >= 0 && u <= 1 && depth >= 0 && depth <= 1) {
