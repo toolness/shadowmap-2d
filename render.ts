@@ -74,9 +74,7 @@ export async function initRenderPipeline(args: {
     onDrawFinished?: (renderTime: number) => void,
     onDrawStarted?: (state: RenderState, computedState: RenderComputedState) => void,
 }) {
-    const { renderingCanvas, shadowMapCanvas, logShadowMapToConsole, onDrawStarted, onDrawFinished } = args
-    let state = args.initialState;
-    let computedState = computeState(state);
+    const { renderingCanvas, shadowMapCanvas, logShadowMapToConsole, initialState, onDrawStarted, onDrawFinished } = args
     const SHADOW_MAP_WIDTH = shadowMapCanvas.width;
     const SHADOW_MAP_HEIGHT = shadowMapCanvas.height;
 
@@ -110,7 +108,7 @@ export async function initRenderPipeline(args: {
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
     });
 
-    function updateSpotlightDataBuffer() {
+    function updateSpotlightDataBuffer(state: RenderState, computedState: RenderComputedState) {
         const { spotlight } = state;
         const viewProjectionData = mat4AsFloatArray(computedState.spotlight.viewProjectionMatrix);
         const spotlightData = new Float32Array([
@@ -199,7 +197,7 @@ export async function initRenderPipeline(args: {
         }
     });
 
-    const initWallVertexBuffer = () => {
+    const initWallVertexBuffer = (state: RenderState) => {
         const { walls } = state;
         const vertices: number[] = [];
         for (const {start, end} of walls) {
@@ -215,7 +213,7 @@ export async function initRenderPipeline(args: {
         return buffer;
     };
 
-    let wallVertexBuffer = initWallVertexBuffer();
+    let wallVertexBuffer = initWallVertexBuffer(initialState);
 
     const wallVertexBufferLayout: GPUVertexBufferLayout = {
         arrayStride: 8,
@@ -317,7 +315,7 @@ export async function initRenderPipeline(args: {
         }]
     });
 
-    function draw() {
+    function draw(state: RenderState, computedState: RenderComputedState) {
         const renderStart = performance.now()
 
         const encoder = device.createCommandEncoder();
@@ -394,23 +392,29 @@ export async function initRenderPipeline(args: {
         }
     }
 
-    updateSpotlightDataBuffer();
-    draw();
+    const initialComputedState = computeState(initialState);
+    updateSpotlightDataBuffer(initialState, initialComputedState);
+    draw(initialState, initialComputedState);
 
-    return {
-        getComputedState: () => computedState,
-        getState: () => state,
-        setState: (newState: RenderState) => {
-            const prevState = state;
-            state = newState;
-            computedState = computeState(state);
-            if (state.spotlight !== prevState.spotlight) {
-                updateSpotlightDataBuffer();
-            }
-            if (state.walls !== prevState.walls) {
-                wallVertexBuffer = initWallVertexBuffer();
-            }
-            draw();
-        },
+    {
+        let state = initialState;
+        let computedState = initialComputedState;
+        return {
+            getComputedState: () => computedState,
+            getState: () => state,
+            setState: (newState: RenderState) => {
+                const prevState = state;
+                state = newState;
+                computedState = computeState(state);
+                if (state.spotlight !== prevState.spotlight) {
+                    updateSpotlightDataBuffer(state, computedState);
+                }
+                if (state.walls !== prevState.walls) {
+                    wallVertexBuffer.destroy();
+                    wallVertexBuffer = initWallVertexBuffer(state);
+                }
+                draw(state, computedState);
+            },
+        }
     }
 }
