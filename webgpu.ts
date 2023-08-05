@@ -6,8 +6,9 @@ const rotationInput = document.getElementById("rotation") as HTMLInputElement;
 const focalLengthInput = document.getElementById("focal-length") as HTMLInputElement;
 const maxDistanceInput = document.getElementById("max-distance") as HTMLInputElement;
 const fovInput = document.getElementById("fov") as HTMLInputElement;
+const renderingStatsPre = document.getElementById("rendering-stats") as HTMLPreElement;
+const shadowMapStatsPre = document.getElementById("shadow-map-stats") as HTMLPreElement;
 const statsPre = document.getElementById("stats") as HTMLPreElement;
-const positionPre = document.getElementById("position") as HTMLPreElement;
 
 const RENDERING_WIDTH = renderingCanvas.width;
 const RENDERING_HEIGHT = renderingCanvas.height;
@@ -388,11 +389,7 @@ function draw() {
 
     device.queue.onSubmittedWorkDone().then(() => {
         const renderTime = Math.ceil(performance.now() - renderStart);
-        statsPre.textContent = [
-            `Shadow map size: ${SHADOW_MAP_WIDTH}x${SHADOW_MAP_HEIGHT} px`,
-            `Rendering size: ${RENDERING_WIDTH}x${RENDERING_HEIGHT} px`,
-            `Frame render time: ${renderTime} ms`,
-        ].join('\n');
+        statsPre.textContent = `Total WebGPU frame render time: ${renderTime} ms`;
     });
 
     if (shadowMapStagingBuffer) {
@@ -410,11 +407,14 @@ function updateAndDraw() {
     updateSpotlightFromInputs();
     updateSpotlightDataBuffer();
     draw();
-    getLabelFor(rotationInput).textContent = `Rotation (${rotationInput.value}°)`;
-    getLabelFor(focalLengthInput).textContent = `Focal length (${focalLengthInput.value})`;
-    getLabelFor(maxDistanceInput).textContent = `Max distance (${maxDistanceInput.value})`;
-    getLabelFor(fovInput).textContent = `Field of view (${fovInput.value}°)`;
-    positionPre.textContent = `Position: (${spotlight.pos[0].toFixed(2)}, ${spotlight.pos[1].toFixed(2)})`;
+    getLabelFor(rotationInput).textContent = `Spotlight rotation (${rotationInput.value}°)`;
+    getLabelFor(focalLengthInput).textContent = `Spotight focal length (${focalLengthInput.value})`;
+    getLabelFor(maxDistanceInput).textContent = `Spotlight max distance (${maxDistanceInput.value})`;
+    getLabelFor(fovInput).textContent = `Spotlight field of view (${fovInput.value}°)`;
+    renderingStatsPre.textContent = [
+        `Spotlight position: (${spotlight.pos[0].toFixed(2)}, ${spotlight.pos[1].toFixed(2)})`,
+        `Rendering size: ${RENDERING_WIDTH}x${RENDERING_HEIGHT} px`,
+    ].join('\n');
 }
 
 updateAndDraw();
@@ -469,5 +469,7 @@ window.addEventListener('keydown', e => {
         incrementOrDecrementRotation(rotDelta);
     }
 });
+
+shadowMapStatsPre.textContent = `Shadow map size: ${SHADOW_MAP_WIDTH}x${SHADOW_MAP_HEIGHT} px`;
 
 export {}
