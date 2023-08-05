@@ -13,7 +13,7 @@ const SHADOW_MAP_HEIGHT = shadowMapCanvas.height;
 
 const LOG_SHADOW_MAP_TO_CONSOLE = false
 
-const SPOTLIGHT_INITIAL_POS: Point2D = [0, 1];
+const SPOTLIGHT_INITIAL_POS: Point2D = [0, -1];
 
 const WALL_VERTICES = new Float32Array([
     0.25, 0.25,
@@ -103,14 +103,14 @@ const spotlightDataBuffer = device.createBuffer({
 });
 
 function updateSpotlightFromInputs() {
-    spotlight.rotation = (Math.PI / 2) - degreesToRadians(rotationInput.valueAsNumber);
+    spotlight.rotation = degreesToRadians(rotationInput.valueAsNumber);
     spotlight.focalLength = focalLengthInput.valueAsNumber;
     spotlight.fieldOfView = degreesToRadians(fovInput.valueAsNumber);
 }
 
 function updateSpotlightDataBuffer() {
     const SPOTLIGHT_Z_FAR = 10;
-    const r = mat4.rotationY(-degreesToRadians(rotationInput.valueAsNumber));
+    const r = mat4.rotationY(Math.PI - spotlight.rotation);
     const t = mat4.translate(r, vec3.create(-spotlight.pos[0], 0, -spotlight.pos[1]));
     const p = mat4.perspective(spotlight.fieldOfView, 1, spotlight.focalLength, SPOTLIGHT_Z_FAR);
     const viewProjection = mat4.multiply(p, t);
