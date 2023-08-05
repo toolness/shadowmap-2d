@@ -83,14 +83,13 @@ function getSpotlightStateFromInputs(): Omit<Spotlight2D, "pos"> {
 }
 
 function handleInputChange() {
-    const prevState = renderPipeline.getState();
-    renderPipeline.setState({
-        ...prevState,
+    renderPipeline.setState(state => ({
+        ...state,
         spotlight: {
-            ...prevState.spotlight,
+            ...state.spotlight,
             ...getSpotlightStateFromInputs()
         }
-    });
+    }));
 }
 
 rotationInput.oninput = handleInputChange;
@@ -136,18 +135,16 @@ window.addEventListener('keydown', e => {
         rotDelta += 1;
     }
     if (xDelta || yDelta) {
-        const prevState = renderPipeline.getState();
-        const pos: Point2D = [
-            prevState.spotlight.pos[0] + xDelta * MOVE_AMOUNT,
-            prevState.spotlight.pos[1] + yDelta * MOVE_AMOUNT,
-        ];
-        renderPipeline.setState({
-            ...prevState,
+        renderPipeline.setState(state => ({
+            ...state,
             spotlight: {
-                ...prevState.spotlight,
-                pos,
+                ...state.spotlight,
+                pos: [
+                    state.spotlight.pos[0] + xDelta * MOVE_AMOUNT,
+                    state.spotlight.pos[1] + yDelta * MOVE_AMOUNT,
+                ]
             }
-        });
+        }));
     } else if (rotDelta) {
         incrementOrDecrementRotation(rotDelta);
     }
@@ -156,17 +153,17 @@ window.addEventListener('keydown', e => {
 shadowMapStatsPre.textContent = `Shadow map size: ${SHADOW_MAP_WIDTH}x${SHADOW_MAP_HEIGHT} px`;
 
 renderingCanvas.addEventListener("mousemove", event => {
-    renderPipeline.setState({
-        ...renderPipeline.getState(),
+    renderPipeline.setState(state => ({
+        ...state,
         cursor: canvasSpaceToClip(renderingCanvas, [event.offsetX, event.offsetY]),
-    });
+    }));
 });
 
 renderingCanvas.addEventListener("mouseout", event => {
-   renderPipeline.setState({
-        ...renderPipeline.getState(),
+   renderPipeline.setState(state => ({
+        ...state,
         cursor: undefined
-    });
+    }));
 });
 
 export {}
