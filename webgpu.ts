@@ -13,7 +13,7 @@ const RENDERING_HEIGHT = renderingCanvas.height;
 const SHADOW_MAP_WIDTH = shadowMapCanvas.width;
 const SHADOW_MAP_HEIGHT = shadowMapCanvas.height;
 
-const LOG_SHADOW_MAP_TO_CONSOLE = false
+const LOG_SHADOW_MAP_TO_CONSOLE = false;
 
 const SPOTLIGHT_INITIAL_POS: Point2D = [0, -1];
 
@@ -390,7 +390,7 @@ function draw() {
             `Rendering size: ${RENDERING_WIDTH}x${RENDERING_HEIGHT} px`,
             `Frame render time: ${renderTime} ms`,
         ].join('\n');
-    })
+    });
 
     if (shadowMapStagingBuffer) {
         device.queue.onSubmittedWorkDone().then(async () => {
