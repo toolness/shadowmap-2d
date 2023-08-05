@@ -83,15 +83,17 @@ type Spotlight2D = {
     pos: Point2D,
     rotation: number,
     focalLength: number,
-    fieldOfView: number
+    fieldOfView: number,
+    maxDistance: number,
 }
 
 const spotlight: Spotlight2D = {
     pos: SPOTLIGHT_INITIAL_POS,
+    maxDistance: 2,
     // These values are all retrieved from the DOM.
-    rotation: 0,
     focalLength: 0,
-    fieldOfView: 0
+    rotation: 0,
+    fieldOfView: 0,
 }
 
 const VEC2_F32_SIZE = 8;
@@ -100,7 +102,7 @@ const MAT4X4_F32_SIZE = 64;
 
 const spotlightDataBuffer = device.createBuffer({
     label: "Spotlight data buffer",
-    size: VEC2_F32_SIZE + 8 + MAT4X4_F32_SIZE,
+    size: VEC2_F32_SIZE + F32_SIZE + F32_SIZE + MAT4X4_F32_SIZE,
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
 });
 
@@ -111,15 +113,16 @@ function updateSpotlightFromInputs() {
 }
 
 function updateSpotlightDataBuffer() {
-    const SPOTLIGHT_Z_FAR = 10;
     const r = mat4.rotationY(Math.PI - spotlight.rotation);
     const t = mat4.translate(r, vec3.create(-spotlight.pos[0], 0, -spotlight.pos[1]));
-    const p = mat4.perspective(spotlight.fieldOfView, 1, spotlight.focalLength, SPOTLIGHT_Z_FAR);
+    const p = mat4.perspective(spotlight.fieldOfView, 1, spotlight.focalLength, spotlight.maxDistance);
     const viewProjection = mat4.multiply(p, t);
     const viewProjectionData = viewProjection as Float32Array;
 
     const spotlightData = new Float32Array([
         ...spotlight.pos,
+        spotlight.focalLength,
+        spotlight.maxDistance
     ]);
     device.queue.writeBuffer(spotlightDataBuffer, 0, spotlightData);
     device.queue.writeBuffer(spotlightDataBuffer, 16, viewProjectionData);

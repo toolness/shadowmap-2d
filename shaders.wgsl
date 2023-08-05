@@ -4,10 +4,10 @@
 
 const PI: f32 = 3.1415926538;
 
-const MAX_Z_FROM_LIGHT: f32 = 2;
-
 struct Spotlight {
     pos: vec2<f32>,
+    focal_length: f32,
+    max_distance: f32,
     light_view_proj_matrix: mat4x4<f32>,
 }
 
@@ -60,7 +60,12 @@ fn fragmentRendering(input: RenderingVertexOutput) -> @location(0) vec4f {
         is_lit = shadow_depth > depth;
     }
     if is_lit {
-        let distance_from_light = 1 - clamp(distance(input.clip_space_pos, spotlight.pos) / MAX_Z_FROM_LIGHT, 0, 1);
+        let abs_distance_from_light = distance(input.clip_space_pos, spotlight.pos);
+        let distance_from_light = 1 - clamp(
+            (abs_distance_from_light - spotlight.focal_length) / (spotlight.max_distance - spotlight.focal_length),
+            0,
+            1
+        );
         return vec4f(distance_from_light, distance_from_light, distance_from_light, 1);
     } else {
         return vec4f(0, 0, 0, 1);
