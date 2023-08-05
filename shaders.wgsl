@@ -26,7 +26,7 @@ fn vertexShadowMap(@location(0) pos: vec2f) -> ShadowMapVertexOutput {
 
 @fragment
 fn fragmentShadowMap(input: ShadowMapVertexOutput) -> @location(0) vec4f {
-    let z = 1 - (input.pos.z / input.pos.w);
+    let z = input.pos.z / input.pos.w;
     return vec4f(z, z, z, 1);
 }
 
