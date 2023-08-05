@@ -8,7 +8,7 @@ struct Spotlight {
     pos: vec2<f32>,
     focal_length: f32,
     max_distance: f32,
-    light_view_proj_matrix: mat4x4<f32>,
+    view_proj_matrix: mat4x4<f32>,
 }
 
 struct ShadowMapVertexOutput {
@@ -18,7 +18,7 @@ struct ShadowMapVertexOutput {
 @vertex
 fn vertexShadowMap(@location(0) pos: vec2f) -> ShadowMapVertexOutput {
     let world_pos = vec4(pos.x, 0, pos.y, 1);
-    let projected_light_pos = spotlight.light_view_proj_matrix * world_pos;
+    let projected_light_pos = spotlight.view_proj_matrix * world_pos;
     var output: ShadowMapVertexOutput;
     output.pos = projected_light_pos;
     return output;
@@ -51,7 +51,7 @@ fn vertexRendering(@location(0) pos: vec2f) -> RenderingVertexOutput {
 @fragment
 fn fragmentRendering(input: RenderingVertexOutput) -> @location(0) vec4f {
     let world_pos = vec4(input.clip_space_pos.x, 0, input.clip_space_pos.y, 1);
-    let projected_light_point = spotlight.light_view_proj_matrix * world_pos;
+    let projected_light_point = spotlight.view_proj_matrix * world_pos;
     let u = (projected_light_point.x / projected_light_point.w + 1) / 2;
     let depth = projected_light_point.z / projected_light_point.w;
     var is_lit: bool = false;

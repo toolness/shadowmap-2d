@@ -1,4 +1,4 @@
-import { mat4, vec3, vec4 } from "./vendor/wgpu-matrix/wgpu-matrix.js";
+import { Mat4, mat4, vec3, vec4 } from "./vendor/wgpu-matrix/wgpu-matrix.js";
 
 const shadowMapCanvas = document.getElementById("shadow-map-canvas") as HTMLCanvasElement;
 const renderingCanvas = document.getElementById("rendering-canvas") as HTMLCanvasElement;
@@ -87,6 +87,7 @@ type Spotlight2D = {
     focalLength: number,
     fieldOfView: number,
     maxDistance: number,
+    viewProjectionMatrix: Mat4
 }
 
 interface State {
@@ -97,11 +98,15 @@ interface State {
 const state: State = {
     spotlight: {
         pos: SPOTLIGHT_INITIAL_POS,
+
         // These values are all retrieved from the DOM.
         focalLength: 0,
         rotation: 0,
         fieldOfView: 0,
         maxDistance: 0,
+
+        // Will be computed later.
+        viewProjectionMatrix: mat4.identity()
     },
     cursor: undefined
 }
@@ -122,16 +127,23 @@ function updateSpotlightFromInputs() {
     spotlight.focalLength = focalLengthInput.valueAsNumber;
     spotlight.maxDistance = maxDistanceInput.valueAsNumber;
     spotlight.fieldOfView = degreesToRadians(fovInput.valueAsNumber);
+
+    const r = mat4.rotationY(Math.PI - spotlight.rotation);
+    const t = mat4.translate(r, vec3.create(-spotlight.pos[0], 0, -spotlight.pos[1]));
+    const p = mat4.perspective(spotlight.fieldOfView, 1, spotlight.focalLength, spotlight.maxDistance);
+    spotlight.viewProjectionMatrix = mat4.multiply(p, t);
+}
+
+function mat4FloatArray(m: Mat4): Float32Array {
+    if (!(m instanceof Float32Array)) {
+        throw new Error(`Assertion failure, not a Float32Array!`);
+    }
+    return m;
 }
 
 function updateSpotlightDataBuffer() {
     const { spotlight } = state;
-    const r = mat4.rotationY(Math.PI - spotlight.rotation);
-    const t = mat4.translate(r, vec3.create(-spotlight.pos[0], 0, -spotlight.pos[1]));
-    const p = mat4.perspective(spotlight.fieldOfView, 1, spotlight.focalLength, spotlight.maxDistance);
-    const viewProjection = mat4.multiply(p, t);
-    const viewProjectionData = viewProjection as Float32Array;
-
+    const viewProjectionData = mat4FloatArray(spotlight.viewProjectionMatrix);
     const spotlightData = new Float32Array([
         ...spotlight.pos,
         spotlight.focalLength,
