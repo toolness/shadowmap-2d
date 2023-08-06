@@ -5,10 +5,14 @@
 const PI: f32 = 3.1415926538;
 const SHADOW_BIAS: f32 = 0.0001;
 
+// These must match their values in the TypeScript code!
+const FLAG_ALWAYS_DRAW_WALLS: u32 = 0x1;
+
 struct Spotlight {
     pos: vec2<f32>,
     focal_length: f32,
     max_distance: f32,
+    flags: u32,
     view_proj_matrix: mat4x4<f32>,
 }
 
@@ -83,6 +87,10 @@ fn fragmentTriangleRendering(input: RenderingVertexOutput) -> @location(0) vec4f
     }
 }
 
+fn is_spotlight_flag_set(flag: u32) -> bool {
+    return (spotlight.flags & flag) != 0;
+}
+
 @fragment
 fn fragmentLineRendering(input: RenderingVertexOutput) -> @location(0) vec4f {
     let is_lit = getIsLit(input.clip_space_pos);
@@ -91,7 +99,9 @@ fn fragmentLineRendering(input: RenderingVertexOutput) -> @location(0) vec4f {
     let diffuse = 1 - emission;
     if (is_lit) {
         return vec4f(base_color * emission + base_color * getProximityToLight(input.clip_space_pos) * diffuse, 1);
-    } else {
+    } else if is_spotlight_flag_set(FLAG_ALWAYS_DRAW_WALLS) {
         return vec4f(base_color * emission, 1);
+    } else {
+        return vec4f();
     }
 }

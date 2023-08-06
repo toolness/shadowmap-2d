@@ -3,7 +3,10 @@ import { fetchShader } from "./network.js";
 import { mat4, vec3 } from "./vendor/wgpu-matrix/wgpu-matrix.js";
 const VEC2_F32_SIZE = 8;
 const F32_SIZE = 4;
+const U32_SIZE = 4;
 const MAT4X4_F32_SIZE = 64;
+// These must match their values in the shader code!
+const FLAG_ALWAYS_DRAW_WALLS = 0x1;
 /**
  * The rendering is just a square that covers the entire clip space.
  */
@@ -52,7 +55,7 @@ export async function initRenderPipeline(args) {
     renderingContext.configure({ device, format: canvasFormat });
     const spotlightDataBuffer = device.createBuffer({
         label: "Spotlight data buffer",
-        size: VEC2_F32_SIZE + F32_SIZE + F32_SIZE + MAT4X4_F32_SIZE,
+        size: VEC2_F32_SIZE + F32_SIZE + F32_SIZE + U32_SIZE + 12 + MAT4X4_F32_SIZE,
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
     });
     function updateSpotlightDataBuffer(state, computedState) {
@@ -63,10 +66,16 @@ export async function initRenderPipeline(args) {
         const spotlightData = new Float32Array([
             ...spotlight.pos,
             spotlight.focalLength,
-            spotlight.maxDistance
+            spotlight.maxDistance,
         ]);
+        let flags = 0;
+        if (spotlight.alwaysDrawWalls) {
+            flags |= FLAG_ALWAYS_DRAW_WALLS;
+        }
+        const flagsData = new Uint32Array([flags]);
         device.queue.writeBuffer(spotlightDataBuffer, 0, spotlightData);
-        device.queue.writeBuffer(spotlightDataBuffer, 16, viewProjectionData);
+        device.queue.writeBuffer(spotlightDataBuffer, spotlightData.byteLength, flagsData);
+        device.queue.writeBuffer(spotlightDataBuffer, spotlightDataBuffer.size - MAT4X4_F32_SIZE, viewProjectionData);
     }
     const shaders = await fetchShader(device, "shaders.wgsl");
     const renderingTriangleVertexBuffer = device.createBuffer({
