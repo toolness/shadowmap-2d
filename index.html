@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+    #shadow-map-canvas {
+        /**
+         * We're actually distorting the shadow map here, making it taller
+         * than it really is, but that's OK because we want it to be
+         * legible.
+         */
+        width: 1024px;
+        height: 32px;
+        image-rendering: pixelated;
+        border: 1px solid black;
+    }
+    label {
+        display: block;
+    }
+    #fatal-error {
+        background: crimson;
+        color: white;
+        white-space: pre-wrap;
+        padding: 1em;
+    }
+    .hidden {
+        display: none;
+    }
+</style>
+<title>Shadowmap 2D (WebGPU)</title>
+<div id="fatal-error" class="hidden"></div>
+<h1>Rendering</h1>
+<canvas id="rendering-canvas" width="512" height="512"></canvas>
+<div>
+    <label for="rotation"></label>
+    <input type="range" id="rotation" min="-179" max="180" value="0">
+    <label for="focal-length"></label>
+    <input type="range" id="focal-length" min="0.05" max="0.95" step="0.05" value="0.1">
+    <label for="max-distance"></label>
+    <input type="range" id="max-distance" min="1" max="4.0" step="0.1" value="2">
+    <label for="fov"></label>
+    <input type="range" id="fov" min="5" max="130" value="60">
+</div>
+<p>Use the WASD keys to move the spotlight.</p>
+<p>Use the slider above, or the Q and E keys, to rotate the spotlight.</p>
+<pre id="rendering-stats"></pre>
+<h1>Shadow map</h1>
+<canvas id="shadow-map-canvas" width="1024" height="1"></canvas>
+<script type="module" src="main.js"></script>
+<pre id="shadow-map-stats"></pre>
+<pre id="stats"></pre>
