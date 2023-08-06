@@ -6,12 +6,14 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "tsc --watch",
-    "build-js": "tsc"
+    "build-js": "tsc",
+    "build-and-deploy": "sh ./build.sh && gh-pages -d dist"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@webgpu/types": "^0.1.34",
+    "gh-pages": "^5.0.0",
     "typescript": "^5.1.6"
   }
 }
