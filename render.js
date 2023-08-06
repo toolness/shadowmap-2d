@@ -36,7 +36,7 @@ export async function initRenderPipeline(args) {
     const SHADOW_MAP_WIDTH = shadowMapCanvas.width;
     const SHADOW_MAP_HEIGHT = shadowMapCanvas.height;
     if (!navigator.gpu) {
-        throw new Error("WebGPU not supported on this browser.");
+        throw new Error("WebGPU not supported on this browser. Try using Chrome?");
     }
     const adapter = await navigator.gpu.requestAdapter({
         powerPreference: "low-power"
