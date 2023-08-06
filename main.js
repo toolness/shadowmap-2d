@@ -1,10 +1,9 @@
 import { getElement, getLabelFor } from "./dom.js";
-import { degreesToRadians, pointToVec4XZ, pointToStr, vec4XZToPoint, canvasSpaceToClip } from "./math.js";
+import { degreesToRadians, pointToVec4XZ, pointToStr, vec4XZToPoint, canvasSpaceToClip, radiansToDegrees } from "./math.js";
 import { initRenderPipeline } from "./render.js";
 import { vec4 } from "./vendor/wgpu-matrix/wgpu-matrix.js";
 const shadowMapCanvas = getElement("canvas", "shadow-map-canvas");
 const renderingCanvas = getElement("canvas", "rendering-canvas");
-const rotationInput = getElement("input", "rotation");
 const focalLengthInput = getElement("input", "focal-length");
 const maxDistanceInput = getElement("input", "max-distance");
 const fovInput = getElement("input", "fov");
@@ -17,7 +16,8 @@ const RENDERING_HEIGHT = renderingCanvas.height;
 const SHADOW_MAP_WIDTH = shadowMapCanvas.width;
 const SHADOW_MAP_HEIGHT = shadowMapCanvas.height;
 const LOG_SHADOW_MAP_TO_CONSOLE = false;
-const SPOTLIGHT_INITIAL_POS = [0, -1];
+const SPOTLIGHT_INITIAL_POS = [0, 1];
+const SPOTLIGHT_INITIAL_ROTATION = 0;
 const WALLS = [
     { start: [0.25, 0.25], end: [0.75, 0.25] },
     { start: [-0.25, -0.25], end: [-0.75, -0.25] },
@@ -35,12 +35,12 @@ const renderPipeline = await initRenderPipeline({
         walls: WALLS,
         spotlight: {
             pos: SPOTLIGHT_INITIAL_POS,
+            rotation: SPOTLIGHT_INITIAL_ROTATION,
             ...getSpotlightStateFromInputs()
         },
         cursor: undefined,
     },
     onDrawStarted(state, computedState) {
-        getLabelFor(rotationInput).textContent = `Spotlight rotation (${rotationInput.value}°)`;
         getLabelFor(focalLengthInput).textContent = `Spotight focal length (${focalLengthInput.value})`;
         getLabelFor(maxDistanceInput).textContent = `Spotlight max distance (${maxDistanceInput.value})`;
         getLabelFor(fovInput).textContent = `Spotlight field of view (${fovInput.value}°)`;
@@ -57,6 +57,7 @@ const renderPipeline = await initRenderPipeline({
         }
         renderingStatsPre.textContent = [
             `Spotlight position: ${pointToStr(state.spotlight.pos)}`,
+            `Spotlight rotation: ${radiansToDegrees(state.spotlight.rotation).toFixed(0)}°`,
             ...cursorStats,
             `Rendering size: ${RENDERING_WIDTH}x${RENDERING_HEIGHT} px`,
         ].join('\n');
@@ -67,7 +68,6 @@ const renderPipeline = await initRenderPipeline({
 });
 function getSpotlightStateFromInputs() {
     return {
-        rotation: degreesToRadians(rotationInput.valueAsNumber),
         focalLength: focalLengthInput.valueAsNumber,
         maxDistance: maxDistanceInput.valueAsNumber,
         fieldOfView: degreesToRadians(fovInput.valueAsNumber),
@@ -81,68 +81,76 @@ function handleInputChange() {
         }
     }));
 }
-rotationInput.oninput = handleInputChange;
 focalLengthInput.oninput = handleInputChange;
 maxDistanceInput.oninput = handleInputChange;
 fovInput.oninput = handleInputChange;
-/**
- * This only works if passed 1 or -1.
- */
-function incrementOrDecrementRotation(delta) {
-    let rotation = rotationInput.valueAsNumber;
-    const min = parseInt(rotationInput.min);
-    const max = parseInt(rotationInput.max);
-    if (rotation === min && delta === -1) {
-        rotation = max;
-    }
-    else if (rotation === max && delta === 1) {
-        rotation = min;
-    }
-    else {
-        rotation += delta;
-    }
-    rotationInput.valueAsNumber = rotation;
-    handleInputChange();
-}
+let keymap = {};
+window.addEventListener('keyup', e => {
+    const key = e.key.toLowerCase();
+    delete keymap[key];
+});
 window.addEventListener('keydown', e => {
     const key = e.key.toLowerCase();
-    const MOVE_AMOUNT = 0.05;
+    keymap[key] = true;
+});
+function getAnimationFromKeymap() {
     let xDelta = 0;
     let yDelta = 0;
     let rotDelta = 0;
-    if (key === 'w') {
+    if (keymap['w']) {
         yDelta = 1;
     }
-    else if (key === 's') {
+    else if (keymap['s']) {
         yDelta = -1;
     }
-    else if (key === 'a') {
+    if (keymap['a']) {
         xDelta = -1;
     }
-    else if (key === 'd') {
+    else if (keymap['d']) {
         xDelta = 1;
     }
-    else if (key === 'q') {
+    if (keymap['q']) {
         rotDelta -= 1;
     }
-    else if (key === 'e') {
+    else if (keymap['e']) {
         rotDelta += 1;
     }
-    if (xDelta || yDelta) {
-        renderPipeline.setState(state => ({
+    return { xDelta, yDelta, rotDelta };
+}
+const VELOCITY = 0.5;
+const ANGULAR_VELOCITY = 1;
+function animate(args) {
+    const { xDelta, yDelta, rotDelta, timeDelta } = args;
+    if (!xDelta && !yDelta && !rotDelta) {
+        return;
+    }
+    renderPipeline.setState(({ spotlight }) => {
+        const pos = [
+            spotlight.pos[0] + xDelta * VELOCITY * timeDelta,
+            spotlight.pos[1] + yDelta * VELOCITY * timeDelta,
+        ];
+        const rotation = spotlight.rotation + rotDelta * ANGULAR_VELOCITY * timeDelta;
+        return {
             spotlight: {
-                ...state.spotlight,
-                pos: [
-                    state.spotlight.pos[0] + xDelta * MOVE_AMOUNT,
-                    state.spotlight.pos[1] + yDelta * MOVE_AMOUNT,
-                ]
+                ...spotlight,
+                pos,
+                rotation
             }
-        }));
-    }
-    else if (rotDelta) {
-        incrementOrDecrementRotation(rotDelta);
-    }
-});
+        };
+    });
+}
+let lastFrame = performance.now();
+function updateKeymapAndAnimate() {
+    let now = performance.now();
+    let timeDelta = (now - lastFrame) / 1000;
+    lastFrame = now;
+    animate({
+        ...getAnimationFromKeymap(),
+        timeDelta
+    });
+    window.requestAnimationFrame(updateKeymapAndAnimate);
+}
+window.requestAnimationFrame(updateKeymapAndAnimate);
 shadowMapStatsPre.textContent = `Shadow map size: ${SHADOW_MAP_WIDTH}x${SHADOW_MAP_HEIGHT} px`;
 renderingCanvas.addEventListener("mousemove", event => {
     renderPipeline.setState({

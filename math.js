@@ -2,6 +2,9 @@ import { vec4 } from "./vendor/wgpu-matrix/wgpu-matrix.js";
 export function degreesToRadians(degrees) {
     return degrees * Math.PI / 180;
 }
+export function radiansToDegrees(radians) {
+    return radians * 180 / Math.PI;
+}
 export function mat4AsFloatArray(m) {
     if (!(m instanceof Float32Array)) {
         throw new Error(`Assertion failure, not a Float32Array!`);

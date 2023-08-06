@@ -18,7 +18,7 @@ const RENDERING_VERTICES = new Float32Array([
 ]);
 function computeState(state) {
     const { spotlight } = state;
-    const rotation = mat4.rotationY(Math.PI - spotlight.rotation);
+    const rotation = mat4.rotationY(-spotlight.rotation);
     const viewMatrix = mat4.translate(rotation, vec3.create(-spotlight.pos[0], 0, -spotlight.pos[1]));
     const projectionMatrix = mat4.perspective(spotlight.fieldOfView, 1, spotlight.focalLength, spotlight.maxDistance);
     const viewProjectionMatrix = mat4.multiply(projectionMatrix, viewMatrix);

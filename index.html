@@ -24,26 +24,33 @@
     .hidden {
         display: none;
     }
+    .rendering-wrapper {
+        display: flex;
+        flex-direction: row;
+        gap: 1em;
+    }
 </style>
-<title>Shadowmap 2D (WebGPU)</title>
+<title>Top-down 2D scene using a shadow map</title>
 <div id="fatal-error" class="hidden"></div>
-<h1>Rendering</h1>
-<canvas id="rendering-canvas" width="512" height="512"></canvas>
-<div>
-    <label for="rotation"></label>
-    <input type="range" id="rotation" min="-179" max="180" value="0">
-    <label for="focal-length"></label>
-    <input type="range" id="focal-length" min="0.05" max="0.95" step="0.05" value="0.1">
-    <label for="max-distance"></label>
-    <input type="range" id="max-distance" min="1" max="4.0" step="0.1" value="2">
-    <label for="fov"></label>
-    <input type="range" id="fov" min="5" max="130" value="60">
+<h1>Top-down 2D scene using a shadow map</h1>
+<p>Use the WASD keys to move the spotlight. Use Q and E to rotate it.</p>
+<div class="rendering-wrapper">
+    <canvas id="rendering-canvas" width="512" height="512"></canvas>
+    <div>
+        <div>
+            <label for="focal-length"></label>
+            <input type="range" id="focal-length" min="0.05" max="0.95" step="0.05" value="0.1">
+            <label for="max-distance"></label>
+            <input type="range" id="max-distance" min="1" max="4.0" step="0.1" value="2">
+            <label for="fov"></label>
+            <input type="range" id="fov" min="5" max="130" value="130">
+        </div>
+        <pre id="rendering-stats"></pre>
+    </div>
 </div>
-<p>Use the WASD keys to move the spotlight.</p>
-<p>Use the slider above, or the Q and E keys, to rotate the spotlight.</p>
-<pre id="rendering-stats"></pre>
 <h1>Shadow map</h1>
 <canvas id="shadow-map-canvas" width="1024" height="1"></canvas>
 <script type="module" src="main.js"></script>
 <pre id="shadow-map-stats"></pre>
 <pre id="stats"></pre>
+<p>For more details, see the <a href="https://github.com/toolness/shadowmap-2d">GitHub repository</a>.</p>
