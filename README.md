@@ -19,6 +19,10 @@ Run `sh ./build.sh` to build everything for deployment, then upload the
 You can also run `npm run build-and-deploy` to deploy everything to GitHub 
 Pages.
 
+## License
+
+Everything in this repository, including the Rust code and the Blender project, is licensed under [CC0 1.0 Universal](./LICENSE.md) (public domain).
+
 ## References
 
 * [Wikipedia's Shadow Mapping page](https://en.wikipedia.org/wiki/Shadow_mapping) - A good overview of the process.
