@@ -20,7 +20,7 @@ const SHADOW_MAP_HEIGHT = shadowMapCanvas.height;
 
 const LOG_SHADOW_MAP_TO_CONSOLE = false;
 
-const SPOTLIGHT_INITIAL_POS: Point2D = [0, -1];
+const SPOTLIGHT_INITIAL_POS: Point2D = [0, 1];
 const SPOTLIGHT_INITIAL_ROTATION = 0;
 
 const WALLS: Line2D[] = [
@@ -122,9 +122,9 @@ function getAnimationFromKeymap() {
         xDelta = 1;
     }
     if (keymap['q']) {
-        rotDelta -= 1;
-    } else if (keymap['e']) {
         rotDelta += 1;
+    } else if (keymap['e']) {
+        rotDelta -= 1;
     }
     return {xDelta, yDelta, rotDelta}
 }
