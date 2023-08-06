@@ -122,9 +122,9 @@ function getAnimationFromKeymap() {
         xDelta = 1;
     }
     if (keymap['q']) {
-        rotDelta += 1;
-    } else if (keymap['e']) {
         rotDelta -= 1;
+    } else if (keymap['e']) {
+        rotDelta += 1;
     }
     return {xDelta, yDelta, rotDelta}
 }
