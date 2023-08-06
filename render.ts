@@ -124,13 +124,13 @@ export async function initRenderPipeline(args: {
     
     const shaders = await fetchShader(device, "shaders.wgsl");
     
-    const renderingVertexBuffer = device.createBuffer({
-        label: "Rendering vertex buffer",
+    const renderingTriangleVertexBuffer = device.createBuffer({
+        label: "Rendering triangle (floor) vertex buffer",
         size: RENDERING_VERTICES.byteLength,
         usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
     });
 
-    device.queue.writeBuffer(renderingVertexBuffer, 0, RENDERING_VERTICES);
+    device.queue.writeBuffer(renderingTriangleVertexBuffer, 0, RENDERING_VERTICES);
 
     const renderingVertexBufferLayout: GPUVertexBufferLayout = {
         arrayStride: 8,
@@ -390,7 +390,7 @@ export async function initRenderPipeline(args: {
             }],
         });
         renderingPass.setPipeline(renderingTrianglePipeline);
-        renderingPass.setVertexBuffer(0, renderingVertexBuffer);
+        renderingPass.setVertexBuffer(0, renderingTriangleVertexBuffer);
         renderingPass.setBindGroup(0, renderingBindGroup);
         renderingPass.draw(RENDERING_VERTICES.length / 2);
 
