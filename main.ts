@@ -29,7 +29,7 @@ const SHADOW_MAP_HEIGHT = shadowMapCanvas.height;
 
 const LOG_SHADOW_MAP_TO_CONSOLE = false;
 
-const SPOTLIGHT_INITIAL_POS: Point2D = [0, 1];
+const SPOTLIGHT_INITIAL_POS: Point2D = [-0.5, 1];
 const SPOTLIGHT_INITIAL_ROTATION = 0;
 
 const WALLS: Line2D[] = [
