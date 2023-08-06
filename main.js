@@ -24,7 +24,7 @@ const RENDERING_HEIGHT = renderingCanvas.height;
 const SHADOW_MAP_WIDTH = shadowMapCanvas.width;
 const SHADOW_MAP_HEIGHT = shadowMapCanvas.height;
 const LOG_SHADOW_MAP_TO_CONSOLE = false;
-const SPOTLIGHT_INITIAL_POS = [0, 1];
+const SPOTLIGHT_INITIAL_POS = [-0.5, 1];
 const SPOTLIGHT_INITIAL_ROTATION = 0;
 const WALLS = [
     { start: [0.25, 0.25], end: [0.75, 0.25] },
