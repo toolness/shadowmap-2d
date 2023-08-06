@@ -6,6 +6,10 @@ export function degreesToRadians(degrees: number): number {
     return degrees * Math.PI / 180;
 }
 
+export function radiansToDegrees(radians: number): number {
+    return radians * 180 / Math.PI
+}
+
 export function mat4AsFloatArray(m: Mat4): Float32Array {
     if (!(m instanceof Float32Array)) {
         throw new Error(`Assertion failure, not a Float32Array!`);
