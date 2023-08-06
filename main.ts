@@ -13,6 +13,14 @@ const shadowMapStatsPre = getElement("pre", "shadow-map-stats");
 const statsPre = getElement("pre", "stats");
 const fatalErrorDiv = getElement("div", "fatal-error");
 const clearWallsButton = getElement("button", "clear-walls");
+const alwaysDrawWallsCheckbox = getElement("input", "always-draw-walls");
+
+const configInputs: HTMLInputElement[] = [
+    focalLengthInput,
+    maxDistanceInput,
+    fovInput,
+    alwaysDrawWallsCheckbox,
+];
 
 const RENDERING_WIDTH = renderingCanvas.width;
 const RENDERING_HEIGHT = renderingCanvas.height;
@@ -80,6 +88,7 @@ function getSpotlightStateFromInputs(): Omit<Spotlight2D, "pos"|"rotation"> {
         focalLength: focalLengthInput.valueAsNumber,
         maxDistance: maxDistanceInput.valueAsNumber,
         fieldOfView: degreesToRadians(fovInput.valueAsNumber),
+        alwaysDrawWalls: alwaysDrawWallsCheckbox.checked,
     };
 }
 
@@ -92,9 +101,9 @@ function handleInputChange() {
     }));
 }
 
-focalLengthInput.oninput = handleInputChange;
-maxDistanceInput.oninput = handleInputChange;
-fovInput.oninput = handleInputChange;
+for (const input of configInputs) {
+    input.addEventListener("input", handleInputChange);
+}
 
 let keymap: { [key: string]: boolean|undefined } = {};
 let isMouseDown = false;
