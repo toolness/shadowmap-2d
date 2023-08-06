@@ -11,6 +11,11 @@ Now run a static web server in a separate terminal window that serves files
 out of the repository's root directory, e.g. via `npx http-server`, and
 visit it.
 
+### Deployment
+
+Run `sh ./build.sh` to build everything for deployment, then upload the
+`dist` directory to a static web server.
+
 ## References
 
 * [Wikipedia's Shadow Mapping page](https://en.wikipedia.org/wiki/Shadow_mapping) - A good overview of the process.
