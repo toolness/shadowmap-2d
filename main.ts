@@ -12,6 +12,7 @@ const renderingStatsPre = getElement("pre", "rendering-stats");
 const shadowMapStatsPre = getElement("pre", "shadow-map-stats");
 const statsPre = getElement("pre", "stats");
 const fatalErrorDiv = getElement("div", "fatal-error");
+const clearWallsButton = getElement("button", "clear-walls");
 
 const RENDERING_WIDTH = renderingCanvas.width;
 const RENDERING_HEIGHT = renderingCanvas.height;
@@ -217,6 +218,12 @@ renderingCanvas.addEventListener("mousemove", event => {
 renderingCanvas.addEventListener("mouseout", event => {
     renderPipeline.setState({
         cursor: undefined
+    });
+});
+
+clearWallsButton.addEventListener("click", () => {
+    renderPipeline.setState({
+        walls: []
     });
 });
 

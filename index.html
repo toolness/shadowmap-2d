@@ -12,7 +12,7 @@
         image-rendering: pixelated;
         border: 1px solid black;
     }
-    label {
+    label, button {
         display: block;
     }
     #fatal-error {
@@ -44,6 +44,7 @@
             <input type="range" id="max-distance" min="1" max="4.0" step="0.1" value="2">
             <label for="fov"></label>
             <input type="range" id="fov" min="5" max="130" value="130">
+            <button type="button" id="clear-walls">Clear walls</button>
         </div>
         <pre id="rendering-stats"></pre>
     </div>
