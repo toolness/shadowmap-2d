@@ -111,6 +111,8 @@ export async function initRenderPipeline(args: {
     function updateSpotlightDataBuffer(state: RenderState, computedState: RenderComputedState) {
         const { spotlight } = state;
         const viewProjectionData = mat4AsFloatArray(computedState.spotlight.viewProjectionMatrix);
+        // Note that we need to write data into the buffer so the elements are properly aligned:
+        // https://www.w3.org/TR/WGSL/#alignment-and-size
         const spotlightData = new Float32Array([
             ...spotlight.pos,
             spotlight.focalLength,
