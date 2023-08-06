@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "tsc --watch",
     "build-js": "tsc",
-    "build-and-deploy": "sh ./build.sh && gh-pages -d dist"
+    "build-and-deploy": "npm run build-js && sh ./copy-to-dist.sh && npm run deploy",
+    "deploy": "gh-pages -d dist"
   },
   "author": "",
   "license": "ISC",

@@ -13,8 +13,8 @@ visit it.
 
 ### Deployment
 
-Run `sh ./build.sh` to build everything for deployment, then upload the
-`dist` directory to a static web server.
+Run `npm run build-js` followed by `sh ./copy-to-dist.sh` to build everything
+for deployment, then upload the `dist` directory to a static web server.
 
 You can also run `npm run build-and-deploy` to deploy everything to GitHub 
 Pages.
