@@ -182,9 +182,12 @@ export async function initRenderPipeline(args: {
         bindGroupLayouts: [renderingBindGroupLayout]
     });
     
-    const renderingPipeline = device.createRenderPipeline({
-        label: "Rendering pipeline",
+    const renderingTrianglePipeline = device.createRenderPipeline({
+        label: "Rendering triangle pipeline",
         layout: renderingPipelineLayout,
+        primitive: {
+            topology: "triangle-list"
+        },
         vertex: {
             module: shaders,
             entryPoint: "vertexRendering",
@@ -192,7 +195,27 @@ export async function initRenderPipeline(args: {
         },
         fragment: {
             module: shaders,
-            entryPoint: "fragmentRendering",
+            entryPoint: "fragmentTriangleRendering",
+            targets: [{
+                format: canvasFormat
+            }],
+        }
+    });
+
+    const renderingLinePipeline = device.createRenderPipeline({
+        label: "Rendering line pipeline",
+        layout: renderingPipelineLayout,
+        primitive: {
+            topology: "line-list"
+        },
+        vertex: {
+            module: shaders,
+            entryPoint: "vertexRendering",
+            buffers: [renderingVertexBufferLayout]
+        },
+        fragment: {
+            module: shaders,
+            entryPoint: "fragmentLineRendering",
             targets: [{
                 format: canvasFormat
             }],
@@ -366,10 +389,15 @@ export async function initRenderPipeline(args: {
                 storeOp: "store"
             }],
         });
-        renderingPass.setPipeline(renderingPipeline);
+        renderingPass.setPipeline(renderingTrianglePipeline);
         renderingPass.setVertexBuffer(0, renderingVertexBuffer);
         renderingPass.setBindGroup(0, renderingBindGroup);
         renderingPass.draw(RENDERING_VERTICES.length / 2);
+
+        renderingPass.setPipeline(renderingLinePipeline);
+        renderingPass.setVertexBuffer(0, wallVertexBuffer);
+        renderingPass.draw(state.walls.length * 2);
+
         renderingPass.end();
     
         device.queue.submit([encoder.finish()]);
