@@ -58,6 +58,8 @@ export async function initRenderPipeline(args) {
     function updateSpotlightDataBuffer(state, computedState) {
         const { spotlight } = state;
         const viewProjectionData = mat4AsFloatArray(computedState.spotlight.viewProjectionMatrix);
+        // Note that we need to write data into the buffer so the elements are properly aligned:
+        // https://www.w3.org/TR/WGSL/#alignment-and-size
         const spotlightData = new Float32Array([
             ...spotlight.pos,
             spotlight.focalLength,
@@ -67,12 +69,12 @@ export async function initRenderPipeline(args) {
         device.queue.writeBuffer(spotlightDataBuffer, 16, viewProjectionData);
     }
     const shaders = await fetchShader(device, "shaders.wgsl");
-    const renderingVertexBuffer = device.createBuffer({
-        label: "Rendering vertex buffer",
+    const renderingTriangleVertexBuffer = device.createBuffer({
+        label: "Rendering triangle (floor) vertex buffer",
         size: RENDERING_VERTICES.byteLength,
         usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
     });
-    device.queue.writeBuffer(renderingVertexBuffer, 0, RENDERING_VERTICES);
+    device.queue.writeBuffer(renderingTriangleVertexBuffer, 0, RENDERING_VERTICES);
     const renderingVertexBufferLayout = {
         arrayStride: 8,
         attributes: [{
@@ -119,9 +121,12 @@ export async function initRenderPipeline(args) {
         label: "Rendering pipeline layout",
         bindGroupLayouts: [renderingBindGroupLayout]
     });
-    const renderingPipeline = device.createRenderPipeline({
-        label: "Rendering pipeline",
+    const renderingTrianglePipeline = device.createRenderPipeline({
+        label: "Rendering triangle pipeline",
         layout: renderingPipelineLayout,
+        primitive: {
+            topology: "triangle-list"
+        },
         vertex: {
             module: shaders,
             entryPoint: "vertexRendering",
@@ -129,7 +134,26 @@ export async function initRenderPipeline(args) {
         },
         fragment: {
             module: shaders,
-            entryPoint: "fragmentRendering",
+            entryPoint: "fragmentTriangleRendering",
+            targets: [{
+                    format: canvasFormat
+                }],
+        }
+    });
+    const renderingLinePipeline = device.createRenderPipeline({
+        label: "Rendering line pipeline",
+        layout: renderingPipelineLayout,
+        primitive: {
+            topology: "line-list"
+        },
+        vertex: {
+            module: shaders,
+            entryPoint: "vertexRendering",
+            buffers: [renderingVertexBufferLayout]
+        },
+        fragment: {
+            module: shaders,
+            entryPoint: "fragmentLineRendering",
             targets: [{
                     format: canvasFormat
                 }],
@@ -287,10 +311,13 @@ export async function initRenderPipeline(args) {
                     storeOp: "store"
                 }],
         });
-        renderingPass.setPipeline(renderingPipeline);
-        renderingPass.setVertexBuffer(0, renderingVertexBuffer);
+        renderingPass.setPipeline(renderingTrianglePipeline);
+        renderingPass.setVertexBuffer(0, renderingTriangleVertexBuffer);
         renderingPass.setBindGroup(0, renderingBindGroup);
         renderingPass.draw(RENDERING_VERTICES.length / 2);
+        renderingPass.setPipeline(renderingLinePipeline);
+        renderingPass.setVertexBuffer(0, wallVertexBuffer);
+        renderingPass.draw(state.walls.length * 2);
         renderingPass.end();
         device.queue.submit([encoder.finish()]);
         onDrawStarted?.(state, computedState);
