@@ -96,6 +96,7 @@ maxDistanceInput.oninput = handleInputChange;
 fovInput.oninput = handleInputChange;
 
 let keymap: { [key: string]: boolean|undefined } = {};
+let isMouseDown = false;
 
 window.addEventListener('keyup', e => {
     const key = e.key.toLowerCase();
@@ -171,10 +172,46 @@ window.requestAnimationFrame(updateKeymapAndAnimate);
 
 shadowMapStatsPre.textContent = `Shadow map size: ${SHADOW_MAP_WIDTH}x${SHADOW_MAP_HEIGHT} px`;
 
+renderingCanvas.addEventListener("mousedown", event => {
+    if (event.button === 0) {
+        const cursor = canvasSpaceToClip(renderingCanvas, [event.offsetX, event.offsetY]);
+        isMouseDown = true;
+        renderPipeline.setState(state => ({
+            walls: [
+                ...state.walls,
+                {start: cursor, end: cursor}
+            ]
+        }));
+    }
+});
+
+renderingCanvas.addEventListener("mouseup", event => {
+    if (event.button === 0) {
+        isMouseDown = false;
+    }
+});
+
 renderingCanvas.addEventListener("mousemove", event => {
-    renderPipeline.setState({
-        cursor: canvasSpaceToClip(renderingCanvas, [event.offsetX, event.offsetY]),
-    });
+    const cursor = canvasSpaceToClip(renderingCanvas, [event.offsetX, event.offsetY]);
+    if (isMouseDown) {
+        renderPipeline.setState(state => {
+            const lastWall = state.walls[state.walls.length - 1];
+            return {
+                walls: [
+                    ...state.walls.slice(0, -1),
+                    {
+                        start: lastWall.start,
+                        end: cursor
+                    }
+                ],
+                cursor
+            }
+        });
+    } else {
+        renderPipeline.setState({
+            cursor,
+        });
+    }
 });
 
 renderingCanvas.addEventListener("mouseout", event => {
