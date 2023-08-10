@@ -193,7 +193,7 @@ export async function initRenderPipeline(args: {
         bindGroupLayouts: [renderingBindGroupLayout]
     });
     
-    const renderingTrianglePipeline = device.createRenderPipeline({
+    const renderingTrianglePipeline = await device.createRenderPipelineAsync({
         label: "Rendering triangle pipeline",
         layout: renderingPipelineLayout,
         primitive: {
@@ -213,7 +213,7 @@ export async function initRenderPipeline(args: {
         }
     });
 
-    const renderingLinePipeline = device.createRenderPipeline({
+    const renderingLinePipeline = await device.createRenderPipelineAsync({
         label: "Rendering line pipeline",
         layout: renderingPipelineLayout,
         primitive: {
@@ -292,7 +292,7 @@ export async function initRenderPipeline(args: {
         bindGroupLayouts: [shadowMapBindGroupLayout]
     });
     
-    const shadowMapPipeline = device.createRenderPipeline({
+    const shadowMapPipeline = await device.createRenderPipelineAsync({
         label: "Shadow map pipeline",
         layout: shadowMapPipelineLayout,
         depthStencil: {
