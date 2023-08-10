@@ -355,7 +355,8 @@ export async function initRenderPipeline(args: {
         const renderStart = performance.now()
 
         const encoder = device.createCommandEncoder();
-    
+
+        encoder.pushDebugGroup("Shadow map");
         const shadowMapPass = encoder.beginRenderPass({
             colorAttachments: [{
                 view: shadowMapContext.getCurrentTexture().createView(),
@@ -389,7 +390,9 @@ export async function initRenderPipeline(args: {
                 depthOrArrayLayers: 1
             });
         }
-    
+        encoder.popDebugGroup();
+
+        encoder.pushDebugGroup("Rendering");
         const renderingPass = encoder.beginRenderPass({
             colorAttachments: [{
                 view: renderingContext.getCurrentTexture().createView(),
@@ -410,6 +413,7 @@ export async function initRenderPipeline(args: {
         renderingPass.draw(state.walls.length * 2);
 
         renderingPass.end();
+        encoder.popDebugGroup();
     
         device.queue.submit([encoder.finish()]);
 
